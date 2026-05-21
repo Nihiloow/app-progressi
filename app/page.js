@@ -4,9 +4,7 @@ export default function Home() {
             <h1 className="text-4xl font-bold">
                 MVP Progressi - En construction
             </h1>
-            <p className="mt-4 text-slate-400">
-                Le moteur RPG est en cours d'installation...
-            </p>
+            <p className="mt-4 text-slate-400">...</p>
         </main>
     );
 }
