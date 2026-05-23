@@ -5,7 +5,7 @@ import { calculateRequiredXP, calculateTaskXP } from "@/utils/xpLogic";
 
 export async function PUT(request, { params }) {
     try {
-        const cookieStore = cookies();
+        const cookieStore = await cookies();
         const userId = cookieStore.get("levelup_session")?.value;
 
         if (!userId) {
@@ -15,9 +15,10 @@ export async function PUT(request, { params }) {
             );
         }
 
-        const taskId = params.id;
+        // CORRECTION NEXT.JS 16 : Attendre la lecture des paramètres d'URL
+        const resolvedParams = await params;
+        const taskId = resolvedParams.id;
 
-        // 1. Récupérer la tâche et vérifier les droits
         const task = await prisma.task.findUnique({
             where: { id: taskId },
         });
@@ -31,15 +32,13 @@ export async function PUT(request, { params }) {
 
         if (task.isCompleted) {
             return NextResponse.json(
-                { error: "Cette quête est déjà validée !" },
+                { error: "Quête déjà validée !" },
                 { status: 400 },
             );
         }
 
-        // 2. Calcul du gain d'XP
         const xpGained = calculateTaskXP(task.difficulty);
 
-        // 3. Récupérer les statistiques actuelles du joueur
         const user = await prisma.user.findUnique({
             where: { id: userId },
         });
@@ -49,17 +48,13 @@ export async function PUT(request, { params }) {
         let xpRequired = calculateRequiredXP(newLevel);
         let hasLeveledUp = false;
 
-        // 4. L'algorithme de passage de niveau
-        // On utilise une boucle 'while' au cas où le joueur gagne assez d'XP
-        // pour passer plusieurs niveaux d'un coup.
         while (newXp >= xpRequired) {
-            newXp -= xpRequired; // Le joueur conserve son surplus d'XP
+            newXp -= xpRequired;
             newLevel += 1;
             xpRequired = calculateRequiredXP(newLevel);
             hasLeveledUp = true;
         }
 
-        // 5. Sauvegarder les modifications (Tâche et Joueur) en Base de Données
         await prisma.task.update({
             where: { id: taskId },
             data: { isCompleted: true },
@@ -70,7 +65,6 @@ export async function PUT(request, { params }) {
             data: { xp: newXp, level: newLevel },
         });
 
-        // 6. Retourner les nouvelles données au Frontend pour l'affichage visuel
         return NextResponse.json(
             {
                 message: "Quête accomplie !",
@@ -85,6 +79,7 @@ export async function PUT(request, { params }) {
             { status: 200 },
         );
     } catch (error) {
+        console.error("Erreur PUT Complete :", error);
         return NextResponse.json(
             { error: "Erreur lors de la validation." },
             { status: 500 },

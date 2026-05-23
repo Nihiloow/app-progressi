@@ -31,8 +31,9 @@ export async function POST(request) {
         }
 
         // 3. Créer une session basique (via les Cookies Next.js)
-        // C'est notre passeport pour le Dashboard !
-        cookies().set("levelup_session", user.id, {
+        // CORRECTION : On attend (await) la promesse des cookies
+        const cookieStore = await cookies();
+        cookieStore.set("levelup_session", user.id, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             maxAge: 60 * 60 * 24 * 7, // 1 semaine
@@ -46,6 +47,7 @@ export async function POST(request) {
             { status: 200 },
         );
     } catch (error) {
+        console.error("Erreur serveur Login :", error); // Radar ajouté
         return NextResponse.json(
             { error: "Erreur lors de la connexion." },
             { status: 500 },

@@ -4,8 +4,7 @@ import { cookies } from "next/headers";
 
 export async function GET() {
     try {
-        // 1. Vérifier qui fait la demande via le cookie de session
-        const cookieStore = cookies();
+        const cookieStore = await cookies(); // <-- CORRECTION ICI
         const userId = cookieStore.get("levelup_session")?.value;
 
         if (!userId) {
@@ -15,16 +14,15 @@ export async function GET() {
             );
         }
 
-        // 2. Récupérer uniquement les tâches de ce joueur spécifique
         const tasks = await prisma.task.findMany({
             where: { userId: userId },
-            orderBy: { createdAt: "desc" }, // Les plus récentes en premier
+            orderBy: { createdAt: "desc" },
         });
 
         return NextResponse.json(tasks, { status: 200 });
     } catch (error) {
         return NextResponse.json(
-            { error: "Erreur lors de la récupération des quêtes." },
+            { error: "Erreur lors de la récupération." },
             { status: 500 },
         );
     }
@@ -32,7 +30,7 @@ export async function GET() {
 
 export async function POST(request) {
     try {
-        const cookieStore = cookies();
+        const cookieStore = await cookies(); // <-- CORRECTION ICI
         const userId = cookieStore.get("levelup_session")?.value;
 
         if (!userId) {
@@ -45,7 +43,6 @@ export async function POST(request) {
         const body = await request.json();
         const { title, difficulty } = body;
 
-        // Créer la tâche et l'attacher au joueur
         const newTask = await prisma.task.create({
             data: {
                 title,
@@ -57,7 +54,7 @@ export async function POST(request) {
         return NextResponse.json(newTask, { status: 201 });
     } catch (error) {
         return NextResponse.json(
-            { error: "Erreur lors de la création de la quête." },
+            { error: "Erreur lors de la création." },
             { status: 500 },
         );
     }

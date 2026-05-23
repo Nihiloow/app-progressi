@@ -16,18 +16,27 @@ export default function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        console.log("1. Bouton cliqué ! Données envoyées :", formData); // Radar d'envoi
 
-        const res = await fetch("/api/auth/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
-        });
+        try {
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
 
-        if (res.ok) {
-            router.push("/login"); // Redirection vers la connexion si succès
-        } else {
-            const data = await res.json();
-            setError(data.error || "Une erreur est survenue.");
+            console.log("2. Réponse du serveur reçue :", res.status); // Radar de réception
+
+            if (res.ok) {
+                console.log("3. Succès ! Redirection en cours...");
+                router.push("/login");
+            } else {
+                const data = await res.json();
+                setError(data.error || "Une erreur est survenue.");
+            }
+        } catch (err) {
+            console.error("Erreur critique (Réseau ou Serveur) :", err);
+            setError("Le serveur ne répond pas. Regarde la console (F12).");
         }
     };
 

@@ -1,9 +1,0 @@
-export default function Dashboard() {
-    return (
-        <main className="flex min-h-screen items-center justify-center bg-slate-950">
-            <h1 className="text-2xl font-bold text-white">
-                Bienvenue sur ton Dashboard Héros !
-            </h1>
-        </main>
-    );
-}
