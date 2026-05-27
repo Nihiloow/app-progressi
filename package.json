@@ -1,25 +1,33 @@
 {
-  "name": "app-progressi",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.19.3",
-    "bcrypt": "^6.0.0",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "prisma": "^6.19.3",
-    "tailwindcss": "^4"
-  }
+    "name": "app-progressi",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint",
+        "format": "prettier --write .",
+        "test": "vitest"
+    },
+    "dependencies": {
+        "@prisma/client": "^6.19.3",
+        "@tanstack/react-query": "^5.100.14",
+        "bcrypt": "^6.0.0",
+        "next": "16.2.6",
+        "next-auth": "^4.24.14",
+        "react": "19.2.4",
+        "react-dom": "19.2.4",
+        "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4",
+        "eslint": "^9",
+        "eslint-config-next": "16.2.6",
+        "eslint-config-prettier": "^10.1.8",
+        "prettier": "^3.8.3",
+        "prisma": "^6.19.3",
+        "tailwindcss": "^4",
+        "vitest": "^4.1.7"
+    }
 }
