@@ -38,7 +38,7 @@ export default function TaskManager({ initialTasks }) {
             // Animation / Notification de Level Up type RPG
             if (data.hasLeveledUp) {
                 alert(
-                    `🎉 LEVEL UP ! Tu es passé niveau ${data.user.level} ! La difficulté augmente...`,
+                    `LEVEL UP ! Tu es passé niveau ${data.user.level} ! La difficulté augmente...`,
                 );
             }
 

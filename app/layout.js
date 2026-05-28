@@ -1,4 +1,5 @@
 import "./globals.css";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 export const metadata = {
     title: "MVP LevelUp",
@@ -8,7 +9,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="fr">
-            <body className="bg-slate-950 text-white">{children}</body>
+            <body>
+                <QueryProvider>{children}</QueryProvider>
+            </body>
         </html>
     );
 }
