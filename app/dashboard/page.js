@@ -3,6 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import XpBar from "@/components/ui/XpBar";
 import TaskItem from "@/components/TaskItem";
+import TaskForm from "@/components/TaskForm";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
     // On récup les datas du joueurs
@@ -25,6 +27,8 @@ export default function Dashboard() {
         },
     });
 
+    const router = useRouter();
+
     // Écran de chargement
     if (isUserLoading || isTasksLoading) {
         return (
@@ -32,6 +36,11 @@ export default function Dashboard() {
                 Chargement de ta progression...
             </div>
         );
+    }
+
+    if (user?.error || !user) {
+        router.push("/login");
+        return null; // On ne rend rien, on attend la redirection
     }
 
     // Calcul du palier d'XP pour la barre
@@ -43,7 +52,13 @@ export default function Dashboard() {
                 Bon retour, {user.pseudo} !
             </h1>
 
-            <XpBar currentXp={user.xp} requiredXp={requiredXp} />
+            <XpBar
+                currentXp={user.xp}
+                requiredXp={requiredXp}
+                level={user.level}
+            />
+
+            <TaskForm />
 
             <div className="mt-10 mb-6">
                 <h2 className="text-xl font-bold text-gray-800">

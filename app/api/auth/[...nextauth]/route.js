@@ -26,7 +26,7 @@ export const authOptions = {
                 );
 
                 if (!passwordMatch) {
-                    throw new Error("Identifiants incorrects."); // On ne laisse aucun indice pour un potentiel pirate
+                    throw new Error("Identifiants incorrects.");
                 }
 
                 return {
@@ -39,14 +39,34 @@ export const authOptions = {
         }),
     ],
     session: {
-        strategy: "jwt", // JSON Web Tokens pour la session
+        strategy: "jwt",
     },
     pages: {
-        signIn: "/login", // On indique à NextAuth d'utiliser la page de login custom
+        signIn: "/login",
+    },
+    // ordonne à NextAuth de conserver nos données custom
+    callbacks: {
+        async jwt({ token, user }) {
+            // si 'user' existe (juste après la connexion), on injecte ses données dans le Token
+            if (user) {
+                token.id = user.id;
+                token.pseudo = user.pseudo;
+                token.level = user.level;
+            }
+            return token;
+        },
+        async session({ session, token }) {
+            // transfère les données du Token vers l'objet 'session' utilisé dans le code
+            if (token) {
+                session.user.id = token.id;
+                session.user.pseudo = token.pseudo;
+                session.user.level = token.level;
+            }
+            return session;
+        },
     },
 };
 
 const handler = NextAuth(authOptions);
 
-// Next.js App Router demande d'exporter GET et POST
 export { handler as GET, handler as POST };

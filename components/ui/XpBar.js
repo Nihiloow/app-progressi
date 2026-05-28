@@ -1,12 +1,18 @@
-export default function XpBar({ currentXp, requiredXp }) {
-    const safeRequiredXp = requiredXp > 0 ? requiredXp : 1; // Cas de la division par 0
+export default function XpBar({ currentXp, requiredXp, level }) {
+    const safeRequiredXp = requiredXp > 0 ? requiredXp : 1;
     const rawPercentage = (currentXp / safeRequiredXp) * 100;
-    const fillPercentage = Math.min(100, Math.max(0, rawPercentage)); // Prend le minimum entre les deux valeurs pour ne pas que la barre déborde
+    const fillPercentage = Math.min(100, Math.max(0, rawPercentage));
 
     return (
         <div className="w-full max-w-md mx-auto my-4">
-            <div className="flex justify-between text-sm text-gray-500 mb-2 font-medium tracking-wide">
-                <span>Niveau actuel : {currentXp} XP</span>
+            <div className="flex justify-between items-end text-sm text-gray-500 mb-2 font-medium tracking-wide">
+                {/* NOUVEAU : Affichage clair du Niveau et de l'XP */}
+                <span className="text-gray-800 font-bold text-base">
+                    Niveau {level}{" "}
+                    <span className="text-gray-400 font-normal text-sm ml-2">
+                        ({currentXp} XP)
+                    </span>
+                </span>
                 <span>Palier : {requiredXp} XP</span>
             </div>
 

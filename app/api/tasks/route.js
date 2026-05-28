@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
 import { createTaskSchema } from "@/core/validation/taskShema";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET() {
     try {
-        const cookieStore = await cookies();
-        const userId = cookieStore.get("levelup_session")?.value;
+        const session = await getServerSession(authOptions);
 
-        if (!userId) {
+        if (!session?.user) {
             return NextResponse.json(
                 { error: "Non autorisé" },
                 { status: 401 },
             );
         }
+
+        const userId = session.user.id;
 
         const tasks = await prisma.task.findMany({
             where: { userId: userId },
@@ -31,15 +33,16 @@ export async function GET() {
 
 export async function POST(request) {
     try {
-        const cookieStore = await cookies();
-        const userId = cookieStore.get("levelup_session")?.value;
+        const session = await getServerSession(authOptions);
 
-        if (!userId) {
+        if (!session?.user) {
             return NextResponse.json(
                 { error: "Non autorisé" },
                 { status: 401 },
             );
         }
+
+        const userId = session.user.id;
 
         const body = await request.json();
         const result = createTaskSchema.safeParse(body);

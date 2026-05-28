@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { signIn } from "next-auth/react"; // import qui gère toute les étapes de la connexion tout seul
 
 export default function Login() {
     const router = useRouter();
@@ -13,17 +14,18 @@ export default function Login() {
         e.preventDefault();
         setError("");
 
-        const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
+        const res = await signIn("credentials", {
+            redirect: false, // empêche NextAuth de recharger la page brutalement
+            email: formData.email,
+            password: formData.password,
         });
 
-        if (res.ok) {
-            router.push("/dashboard"); // Redirection vers le cœur du jeu
+        // gestion de la réponse simplifiée
+        if (res?.error) {
+            setError(res.error); // renvoie le message d'erreur de notre fichier [...nextauth]/route.js
         } else {
-            const data = await res.json();
-            setError(data.error || "Identifiants incorrects.");
+            router.push("/dashboard");
+            router.refresh(); // force un rafraîchissement léger pour que le serveur prenne le nouveau cookie en compte
         }
     };
 
