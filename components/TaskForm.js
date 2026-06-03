@@ -31,19 +31,19 @@ export default function TaskForm() {
         <div className="mb-6">
             <form
                 onSubmit={handleSubmit}
-                className="bg-gray-50 p-4 rounded-lg border flex flex-col md:flex-row gap-4 items-center shadow-sm"
+                className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col md:flex-row gap-4 items-center shadow-sm dark:bg-zinc-900 dark:border-zinc-800"
             >
                 <input
                     type="text"
                     placeholder="Nouvelle quête... (ex: Terminer le design de la homepage)"
-                    className="flex-1 w-full p-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    className="flex-1 w-full p-3 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-slate-900 dark:bg-zinc-950 dark:border-zinc-800 dark:text-slate-100 dark:placeholder-zinc-500"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={createTaskMutation.isPending}
                 />
 
                 <select
-                    className="p-3 w-full md:w-auto border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-700"
+                    className="p-3 w-full md:w-auto border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-700 dark:bg-zinc-950 dark:border-zinc-800 dark:text-slate-300"
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
                     disabled={createTaskMutation.isPending}
