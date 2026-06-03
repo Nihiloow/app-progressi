@@ -48,9 +48,9 @@ export default function TaskForm() {
                     onChange={(e) => setDifficulty(e.target.value)}
                     disabled={createTaskMutation.isPending}
                 >
-                    <option value={1}>Facile (50 XP)</option>
-                    <option value={2}>Moyen (100 XP)</option>
-                    <option value={3}>Difficile (150 XP)</option>
+                    <option value={1}>Facile</option>
+                    <option value={2}>Moyen</option>
+                    <option value={3}>Difficile</option>
                 </select>
 
                 <button

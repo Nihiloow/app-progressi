@@ -2,16 +2,18 @@
 import { useCompleteTask } from "@/hooks/useCompleteTask";
 import { useDeleteTask } from "@/hooks/useDeleteTask";
 
-export default function TaskItem({ task }) {
+export default function TaskItem({ task, isSelected, onSelect }) {
     const completeTaskMutation = useCompleteTask();
     const deleteTaskMutation = useDeleteTask();
 
-    const handleComplete = () => {
+    const handleComplete = (e) => {
+        e.stopPropagation();
         if (task.isCompleted) return;
         completeTaskMutation.mutate(task.id);
     };
 
-    const handleDelete = () => {
+    const handleDelete = (e) => {
+        e.stopPropagation();
         if (window.confirm("Es-tu sûr de vouloir abandonner cette quête ?")) {
             deleteTaskMutation.mutate(task.id);
         }
@@ -19,10 +21,13 @@ export default function TaskItem({ task }) {
 
     return (
         <div
-            className={`flex justify-between items-center p-4 border rounded-lg transition-all duration-300 ${
-                task.isCompleted
-                    ? "bg-slate-50 border-slate-200 opacity-60 dark:bg-zinc-950 dark:border-zinc-900"
-                    : "bg-white border-slate-200 shadow-sm dark:bg-zinc-900 dark:border-zinc-800"
+            onClick={() => onSelect(task.id)}
+            className={`flex justify-between items-center p-4 border rounded-lg transition-all duration-300 cursor-pointer ${
+                isSelected
+                    ? "border-indigo-500 bg-indigo-50/50 shadow-md dark:border-indigo-500/50 dark:bg-indigo-500/10"
+                    : task.isCompleted
+                      ? "bg-slate-50 border-slate-200 opacity-60 dark:bg-zinc-950 dark:border-zinc-900"
+                      : "bg-white border-slate-200 shadow-sm hover:border-slate-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
             }`}
         >
             <div className="flex flex-col">
@@ -33,10 +38,10 @@ export default function TaskItem({ task }) {
                 </span>
                 <span className="text-xs text-slate-500 mt-1 font-medium tracking-wide dark:text-zinc-500">
                     {task.difficulty === 1
-                        ? "FACILE (50 XP)"
+                        ? "FACILE"
                         : task.difficulty === 2
-                          ? "MOYEN (100 XP)"
-                          : "DIFFICILE (150 XP)"}
+                          ? "MOYEN"
+                          : "DIFFICILE"}
                 </span>
             </div>
 
