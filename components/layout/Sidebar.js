@@ -16,7 +16,8 @@ export default function Sidebar() {
     // écran de chargement local pour la sidebar
     if (isLoading) {
         return (
-            <aside className="flex w-64 flex-col border-r border-slate-200 bg-slate-50 p-6 dark:border-zinc-800 dark:bg-[#18181b]">
+            // Ajout de : hidden md:flex h-full
+            <aside className="hidden h-full w-64 flex-col border-r border-slate-200 bg-slate-50 p-6 md:flex dark:border-zinc-800 dark:bg-[#18181b]">
                 <div className="mx-auto mb-8 flex flex-col items-center space-y-4">
                     <div className="h-24 w-24 animate-pulse rounded-full bg-slate-200 dark:bg-zinc-800"></div>
                     <div className="h-4 w-24 animate-pulse rounded bg-slate-200 dark:bg-zinc-800"></div>
@@ -30,7 +31,8 @@ export default function Sidebar() {
     if (!user || user.error) return null;
 
     return (
-        <aside className="flex w-64 flex-col border-r border-slate-200 bg-slate-50 p-6 dark:border-zinc-800 dark:bg-[#18181b]">
+        // Ajout de : hidden md:flex h-full
+        <aside className="hidden h-full w-64 flex-col border-r border-slate-200 bg-slate-50 p-6 md:flex dark:border-zinc-800 dark:bg-[#18181b]">
             <div className="mb-8">
                 <AvatarProgress user={user} />
             </div>

@@ -5,10 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import TaskItem from "@/components/TaskItem";
 import TaskForm from "@/components/TaskForm";
 import TaskDetails from "@/components/TaskDetails";
+import MobileTaskForm from "@/components/MobileTaskForm";
 import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
     const [selectedTaskId, setSelectedTaskId] = useState(null);
+    const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
+    const router = useRouter();
 
     const { data: user, isLoading: isUserLoading } = useQuery({
         queryKey: ["user"],
@@ -27,8 +30,6 @@ export default function DashboardPage() {
             return res.json();
         },
     });
-
-    const router = useRouter();
 
     if (isUserLoading || isTasksLoading) {
         return (
@@ -52,13 +53,12 @@ export default function DashboardPage() {
         return null;
     }
 
-    // trouver la tâche complète à partir de l'ID sélectionné
     const selectedTask = tasks?.find((t) => t.id === selectedTaskId);
 
     return (
         <>
-            <main className="flex flex-1 flex-col overflow-hidden">
-                <header className="border-b border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
+            <main className="flex flex-1 flex-col overflow-hidden relative">
+                <header className="hidden md:block border-b border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
                     <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
                         Quêtes du jour
                     </h1>
@@ -77,16 +77,44 @@ export default function DashboardPage() {
                                 <TaskItem
                                     key={task.id}
                                     task={task}
-                                    isSelected={task.id === selectedTaskId} // vérifie si c'est la tâche active
-                                    onSelect={setSelectedTaskId} // passe la fonction de mise à jour
+                                    isSelected={task.id === selectedTaskId}
+                                    onSelect={setSelectedTaskId}
                                 />
                             ))
                         )}
                     </div>
                 </div>
+
+                {/* bouton d'ajout mobile */}
+                <button
+                    onClick={() => setIsMobileFormOpen(true)}
+                    className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 md:hidden"
+                    aria-label="Nouvelle quête"
+                >
+                    <svg
+                        className="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 4v16m8-8H4"
+                        />
+                    </svg>
+                </button>
             </main>
 
+            {/* panneau de détails sur Bureau */}
             <TaskDetails task={selectedTask} />
+
+            {/* tiroir d'ajout sur Mobile */}
+            <MobileTaskForm
+                isOpen={isMobileFormOpen}
+                onClose={() => setIsMobileFormOpen(false)}
+            />
         </>
     );
 }

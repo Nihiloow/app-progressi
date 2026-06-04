@@ -35,7 +35,7 @@ export default function TaskForm() {
             >
                 <input
                     type="text"
-                    placeholder="Nouvelle quête... (ex: Terminer le design de la homepage)"
+                    placeholder="Nouvelle quête..."
                     className="flex-1 w-full p-3 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-slate-900 dark:bg-zinc-950 dark:border-zinc-800 dark:text-slate-100 dark:placeholder-zinc-500"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -58,7 +58,7 @@ export default function TaskForm() {
                     disabled={createTaskMutation.isPending || !title.trim()}
                     className="w-full md:w-auto bg-indigo-500 text-white px-6 py-3 rounded-md font-medium hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {createTaskMutation.isPending ? "Ajout..." : "Forger"}
+                    {createTaskMutation.isPending ? "Ajout..." : "Créer"}
                 </button>
             </form>
 

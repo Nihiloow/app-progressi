@@ -1,16 +1,16 @@
 import "./globals.css";
-import QueryProvider from "@/components/providers/QueryProvider";
+import Providers from "@/components/Providers";
 
 export const metadata = {
-    title: "MVP LevelUp",
-    description: "Gamifie ta productivité",
+    title: "Progressi",
+    description: "...",
 };
 
 export default function RootLayout({ children }) {
     return (
         <html lang="fr">
             <body>
-                <QueryProvider>{children}</QueryProvider>
+                <Providers>{children}</Providers>
             </body>
         </html>
     );
