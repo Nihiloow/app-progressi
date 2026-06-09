@@ -4,24 +4,28 @@ const xpFloor = {
     3: 150,
 };
 
+export const dailyLimits = {
+    1: 5,
+    2: 3,
+    3: 1,
+};
+
 export function calculateRequiredXP(level) {
     return level * 100;
 }
 
 export function addExperience(currentXp, currentLevel, difficulty) {
     const toNextLevel = calculateRequiredXP(currentLevel);
-
     const incomingXp = xpFloor[difficulty] || 50;
 
     let totalXp = currentXp + incomingXp;
     let newLevel = currentLevel;
     let hasLeveledUp = false;
-    const xpGained = totalXp;
 
-    while (totalXp >= toNextLevel) {
-        newLevel = currentLevel + 1;
+    while (totalXp >= calculateRequiredXP(newLevel)) {
+        totalXp -= calculateRequiredXP(newLevel);
+        newLevel += 1;
         hasLeveledUp = true;
-        totalXp -= toNextLevel;
     }
 
     return {
@@ -29,5 +33,20 @@ export function addExperience(currentXp, currentLevel, difficulty) {
         newLevel: newLevel,
         hasLeveledUp: hasLeveledUp,
         xpGained: incomingXp,
+    };
+}
+
+export function removeExperience(currentXp, currentLevel, difficulty) {
+    const xpToRemove = xpFloor[difficulty] || 50;
+    let newXp = currentXp - xpToRemove;
+
+    if (newXp < 0) {
+        newXp = 0;
+    }
+
+    return {
+        newXp: newXp,
+        newLevel: currentLevel,
+        xpLost: currentXp - newXp,
     };
 }

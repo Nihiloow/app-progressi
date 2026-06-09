@@ -1,32 +1,50 @@
 import { prisma } from "@/lib/prisma";
-import { addExperience } from "../engine/progression";
+import {
+    addExperience,
+    removeExperience,
+    dailyLimits,
+} from "../engine/progression";
 
 export const TaskService = {
     async completeTask(taskId, userId) {
-        // 1. Récupération et vérification de la quête
         const task = await prisma.task.findUnique({ where: { id: taskId } });
-
         if (!task || task.userId !== userId)
             throw new Error("Quête introuvable.");
         if (task.isCompleted) throw new Error("Quête déjà validée.");
 
-        // 2. Récupération du joueur
         const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) throw new Error("Joueur introuvable.");
 
-        // -----------------------------------------------------
-        // À TOI DE JOUER :
-        // 1. Utilise 'addExperience' en lui passant l'XP du joueur, son niveau, et la difficulté de la quête.
-        // 2. Stocke le résultat dans une constante (ex: 'progressionResult').
-        // 3. Mets à jour la Task dans Prisma (isCompleted: true).
-        // 4. Mets à jour le User dans Prisma (xp et level) en utilisant les données de 'progressionResult'.
-        // -----------------------------------------------------
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
 
-        const progressionResult = addExperience(
-            user.xp,
-            user.level,
-            task.difficulty,
-        );
+        const completedToday = await prisma.task.count({
+            where: {
+                userId,
+                difficulty: task.difficulty,
+                isCompleted: true,
+                updatedAt: { gte: startOfDay },
+            },
+        });
+
+        const limit = dailyLimits[task.difficulty];
+        let progressionResult = {
+            newXp: user.xp,
+            newLevel: user.level,
+            xpGained: 0,
+            hasLeveledUp: false,
+        };
+        let message = "Quête accomplie !";
+
+        if (completedToday < limit) {
+            progressionResult = addExperience(
+                user.xp,
+                user.level,
+                task.difficulty,
+            );
+        } else {
+            message =
+                "Quête accomplie ! (Limite d'XP journalière atteinte pour cette difficulté)";
+        }
 
         await prisma.task.update({
             where: { id: taskId },
@@ -41,15 +59,45 @@ export const TaskService = {
             },
         });
 
-        // 5. On retourne un objet formaté pour l'API
         return {
-            message: "Quête accomplie !",
+            message,
             xpGained: progressionResult.xpGained,
             hasLeveledUp: progressionResult.hasLeveledUp,
             user: {
                 level: progressionResult.newLevel,
                 xp: progressionResult.newXp,
             },
+        };
+    },
+
+    async uncompleteTask(taskId, userId) {
+        const task = await prisma.task.findUnique({ where: { id: taskId } });
+        if (!task || task.userId !== userId)
+            throw new Error("Quête introuvable.");
+        if (!task.isCompleted) throw new Error("Quête déjà non validée.");
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        const progressionResult = removeExperience(
+            user.xp,
+            user.level,
+            task.difficulty,
+        );
+
+        const updatedTask = await prisma.task.update({
+            where: { id: taskId },
+            data: { isCompleted: false },
+        });
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { xp: progressionResult.newXp },
+        });
+
+        return {
+            message: "Validation annulée.",
+            xpLost: progressionResult.xpLost,
+            task: updatedTask,
         };
     },
 };

@@ -1,77 +1,85 @@
 "use client";
+
 import { useCompleteTask } from "@/hooks/useCompleteTask";
-import { useDeleteTask } from "@/hooks/useDeleteTask";
+import { useUpdateTask } from "@/hooks/useUpdateTask"; // Nouveau hook
 
 export default function TaskItem({ task, isSelected, onSelect }) {
     const completeTaskMutation = useCompleteTask();
-    const deleteTaskMutation = useDeleteTask();
+    const updateTaskMutation = useUpdateTask();
 
-    const handleComplete = (e) => {
-        e.stopPropagation();
-        if (task.isCompleted) return;
-        completeTaskMutation.mutate(task.id);
-    };
+    const isPending =
+        completeTaskMutation.isPending || updateTaskMutation.isPending;
 
-    const handleDelete = (e) => {
+    const handleToggleComplete = (e) => {
         e.stopPropagation();
-        if (window.confirm("Es-tu sûr de vouloir abandonner cette quête ?")) {
-            deleteTaskMutation.mutate(task.id);
+
+        if (!task.isCompleted) {
+            completeTaskMutation.mutate(task.id);
+        } else {
+            updateTaskMutation.mutate({
+                id: task.id,
+                data: { isCompleted: false },
+            });
         }
     };
 
     return (
         <div
             onClick={() => onSelect(task.id)}
-            className={`flex justify-between items-center p-4 border rounded-lg transition-all duration-300 cursor-pointer ${
+            className={`flex items-center gap-4 p-3 border rounded-xl transition-all duration-200 cursor-pointer ${
                 isSelected
-                    ? "border-indigo-500 bg-indigo-50/50 shadow-md dark:border-indigo-500/50 dark:bg-indigo-500/10"
-                    : task.isCompleted
-                      ? "bg-slate-50 border-slate-200 opacity-60 dark:bg-zinc-950 dark:border-zinc-900"
-                      : "bg-white border-slate-200 shadow-sm hover:border-slate-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
-            }`}
+                    ? "border-indigo-500 bg-indigo-50/50 shadow-sm dark:border-indigo-500/50 dark:bg-indigo-500/10"
+                    : "bg-white border-slate-200 shadow-sm hover:border-slate-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
+            } ${task.isCompleted ? "opacity-60 bg-slate-50 dark:bg-zinc-950" : ""}`}
         >
-            <div className="flex flex-col">
+            <button
+                onClick={handleToggleComplete}
+                disabled={isPending}
+                className={`flex-shrink-0 flex h-5 w-5 items-center justify-center rounded-full border transition-all ${
+                    task.isCompleted
+                        ? "border-indigo-500 bg-indigo-500 text-white dark:border-indigo-600 dark:bg-indigo-600"
+                        : "border-slate-300 hover:border-indigo-400 dark:border-zinc-600 dark:hover:border-indigo-500"
+                } ${isPending ? "opacity-50 cursor-wait" : ""}`}
+            >
+                {task.isCompleted && (
+                    <svg
+                        className="h-3.5 w-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                        />
+                    </svg>
+                )}
+            </button>
+
+            <div className="flex flex-col flex-1 overflow-hidden">
                 <span
-                    className={`font-medium ${task.isCompleted ? "line-through text-slate-400 dark:text-zinc-600" : "text-slate-800 dark:text-slate-200"}`}
+                    className={`truncate text-sm font-medium transition-all ${
+                        task.isCompleted
+                            ? "line-through text-slate-400 dark:text-zinc-600"
+                            : "text-slate-800 dark:text-slate-200"
+                    }`}
                 >
                     {task.title}
                 </span>
-                <span className="text-xs text-slate-500 mt-1 font-medium tracking-wide dark:text-zinc-500">
-                    {task.difficulty === 1
-                        ? "FACILE"
-                        : task.difficulty === 2
-                          ? "MOYEN"
-                          : "DIFFICILE"}
-                </span>
-            </div>
 
-            <div className="flex items-center gap-3">
-                <button
-                    onClick={handleComplete}
-                    disabled={
-                        completeTaskMutation.isPending || task.isCompleted
-                    }
-                    className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                        task.isCompleted
-                            ? "bg-emerald-100 text-emerald-700 cursor-not-allowed dark:bg-emerald-500/10 dark:text-emerald-400"
-                            : "bg-indigo-500 text-white hover:bg-indigo-600"
-                    } ${completeTaskMutation.isPending ? "opacity-50 cursor-wait" : ""}`}
-                >
-                    {task.isCompleted
-                        ? "✓ Validée"
-                        : completeTaskMutation.isPending
-                          ? "Validation..."
-                          : "Valider"}
-                </button>
-
-                <button
-                    onClick={handleDelete}
-                    disabled={deleteTaskMutation.isPending}
-                    className="text-slate-400 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-500/10"
-                    title="Abandonner la quête"
-                >
-                    {deleteTaskMutation.isPending ? "..." : "✕"}
-                </button>
+                <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">
+                        {task.priority !== "NONE"
+                            ? task.priority
+                            : task.difficulty === 1
+                              ? "Facile"
+                              : task.difficulty === 2
+                                ? "Moyen"
+                                : "Difficile"}
+                    </span>
+                </div>
             </div>
         </div>
     );
