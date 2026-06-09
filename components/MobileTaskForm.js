@@ -137,7 +137,7 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                 type="button"
                                 className="flex items-center gap-1 rounded text-sm font-medium text-indigo-500 transition-colors active:text-indigo-600 dark:text-indigo-400"
                             >
-                                📅 Aujourd'hui
+                                Aujourd'hui
                             </button>
 
                             {/* Système de drapeaux */}

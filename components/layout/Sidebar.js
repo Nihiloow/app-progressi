@@ -31,7 +31,6 @@ export default function Sidebar() {
     if (!user || user.error) return null;
 
     return (
-        // Ajout de : hidden md:flex h-full
         <aside className="hidden h-full w-64 flex-col border-r border-slate-200 bg-slate-50 p-6 md:flex dark:border-zinc-800 dark:bg-[#18181b]">
             <div className="mb-8">
                 <AvatarProgress user={user} />
@@ -39,10 +38,16 @@ export default function Sidebar() {
 
             <nav className="flex flex-col gap-2">
                 <button className="flex items-center gap-3 rounded-lg bg-indigo-50 p-3 text-sm font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                    Aujourd'hui
+                    Tasks
                 </button>
                 <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">
-                    Boîte de réception
+                    ...
+                </button>
+                <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">
+                    ...
+                </button>
+                <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">
+                    ...
                 </button>
             </nav>
         </aside>

@@ -15,21 +15,63 @@ model User {
   pseudo    String
   xp        Int      @default(0)
   level     Int      @default(1)
-  tasks     Task[]   // Relation : un utilisateur possède plusieurs tâches
+  tasks     Task[]   
+  tags      Tag[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+// drapeaux de priorité
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+  NONE
+}
+
+// charge cognitive
+enum TaskType {
+  DEEP_WORK       // Concentration intense (Code, Architecture, Stratégie)
+  SHALLOW_WORK    // Tâches légères / Routines
+  ADMINISTRATIVE  // Mails, organisation, administratif
+  NONE
+}
+
+// modèle Task
 model Task {
   id          String   @id @default(uuid())
   title       String
-  difficulty  Int      // 1 = Facile, 2 = Moyen, 3 = Difficile
+  difficulty  Int      @default(1) // On conserve l'impact sur l'XP (1, 2, 3)
   isCompleted Boolean  @default(false)
   
-  // Clé étrangère et relation avec le User
+  // Nouveaux champs avec valeurs par défaut pour ne pas casser l'existant
+  priority    Priority @default(NONE)
+  taskType    TaskType @default(SHALLOW_WORK)
+  
+  // Relation Many-to-Many implicite avec les Tags
+  tags        Tag[]
+  
+  // Relation existante avec l'utilisateur
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// tags
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  color     String?  // Optionnel : pour donner un style visuel à l'étiquette
+  
+  // Relation inverse vers les tâches
+  tasks     Task[]
+  
+  // Un tag appartient à un utilisateur spécifique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Index unique : un utilisateur ne peut pas créer deux fois le même nom de tag
+  @@unique([name, userId])
 }

@@ -29,7 +29,7 @@ export default function MobileHeader() {
     return (
         <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-950">
             <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                Quêtes du jour
+                Tasks du jour
             </h1>
 
             <button

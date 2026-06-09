@@ -60,7 +60,7 @@ export default function DashboardPage() {
             <main className="flex flex-1 flex-col overflow-hidden relative">
                 <header className="hidden md:block border-b border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
                     <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
-                        Quêtes du jour
+                        Tasks du jour
                     </h1>
                     <TaskForm />
                 </header>
@@ -69,8 +69,7 @@ export default function DashboardPage() {
                     <div className="mx-auto max-w-3xl space-y-3">
                         {tasks?.length === 0 ? (
                             <p className="mt-10 text-center text-sm text-slate-400">
-                                Ta liste est vide. Ajoute une quête pour
-                                commencer.
+                                Tu n'as visiblement rien à faire aujourd'hui...
                             </p>
                         ) : (
                             tasks?.map((task) => (

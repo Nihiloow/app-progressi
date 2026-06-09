@@ -35,7 +35,7 @@ export default function TaskForm() {
             >
                 <input
                     type="text"
-                    placeholder="Nouvelle quête..."
+                    placeholder="Ajoutez une task ..."
                     className="flex-1 w-full p-3 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-slate-900 dark:bg-zinc-950 dark:border-zinc-800 dark:text-slate-100 dark:placeholder-zinc-500"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -48,9 +48,9 @@ export default function TaskForm() {
                     onChange={(e) => setDifficulty(e.target.value)}
                     disabled={createTaskMutation.isPending}
                 >
-                    <option value={1}>Facile</option>
-                    <option value={2}>Moyen</option>
-                    <option value={3}>Difficile</option>
+                    <option value={1}>Faible</option>
+                    <option value={2}>Moyenne</option>
+                    <option value={3}>Haute</option>
                 </select>
 
                 <button
