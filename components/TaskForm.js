@@ -15,7 +15,7 @@ export default function TaskForm() {
     const [openMenu, setOpenMenu] = useState(null); // "priority", "type", "more"
     const containerRef = useRef(null);
 
-    // On utilise notre super Hook !
+    // Extraction de TOUTE la logique et des états (Date incluse !) depuis le Hook
     const {
         title,
         setTitle,
@@ -23,6 +23,8 @@ export default function TaskForm() {
         setPriority,
         taskType,
         setTaskType,
+        dueDate,
+        setDueDate,
         isPending,
         isError,
         error,
@@ -42,26 +44,26 @@ export default function TaskForm() {
             document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Helpers UI
+    // Configuration des rendus graphiques
     const getPriorityConfig = (level) => {
         switch (level) {
             case "HIGH":
                 return {
                     color: "text-red-500",
                     bg: "bg-red-50",
-                    label: "Haute",
+                    label: "Surcharge",
                 };
             case "MEDIUM":
                 return {
                     color: "text-amber-500",
                     bg: "bg-amber-50",
-                    label: "Moyenne",
+                    label: "Soutenu",
                 };
             case "LOW":
                 return {
                     color: "text-blue-500",
                     bg: "bg-blue-50",
-                    label: "Basse",
+                    label: "Calme",
                 };
             default:
                 return {
@@ -71,6 +73,7 @@ export default function TaskForm() {
                 };
         }
     };
+
     const getTypeConfig = (type) => {
         switch (type) {
             case "DEEP_WORK":
@@ -91,6 +94,7 @@ export default function TaskForm() {
                 onSubmit={handleSubmit}
                 className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 pr-3 shadow-sm transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 dark:border-zinc-800 dark:bg-zinc-900/50 dark:focus-within:bg-zinc-950"
             >
+                {/* Icône Déco + */}
                 <div className="pl-3 text-slate-400">
                     <svg
                         className="h-5 w-5"
@@ -107,6 +111,7 @@ export default function TaskForm() {
                     </svg>
                 </div>
 
+                {/* Champ d'écriture principal */}
                 <input
                     type="text"
                     placeholder="Que veux-tu accomplir ? (Appuie sur Entrée pour forger)"
@@ -124,8 +129,37 @@ export default function TaskForm() {
                     Submit
                 </button>
 
+                {/* --- CONFIGURATION DES PARAMÈTRES (BARRE D'OUTILS) --- */}
                 <div className="flex items-center gap-1 border-l border-slate-200 pl-2 dark:border-zinc-800">
-                    {/* Pop-up Type de tâche */}
+                    {/* LE SÉLECTEUR DE DATE INTERACTIF ET INVISIBLE */}
+                    <div className="relative flex items-center">
+                        <input
+                            type="date"
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}
+                            className="absolute inset-0 h-full w-full cursor-pointer opacity-0 z-10"
+                        />
+                        <button
+                            type="button"
+                            className={`flex items-center gap-1 rounded p-2 text-sm font-medium transition-colors hover:bg-slate-200 dark:hover:bg-zinc-800 ${
+                                dueDate
+                                    ? "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-500/10"
+                                    : "text-slate-500 dark:text-slate-400"
+                            }`}
+                        >
+                            <CalendarIcon className="h-5 w-5" />
+                            <span className="hidden lg:block font-semibold">
+                                {dueDate
+                                    ? new Date(dueDate).toLocaleDateString(
+                                          "fr-FR",
+                                          { day: "numeric", month: "short" },
+                                      )
+                                    : "Date"}
+                            </span>
+                        </button>
+                    </div>
+
+                    {/* Pop-up Sélection Type de charge cognitive */}
                     <div className="relative">
                         <button
                             type="button"
@@ -133,6 +167,7 @@ export default function TaskForm() {
                                 setOpenMenu(openMenu === "type" ? null : "type")
                             }
                             className="flex items-center gap-1 rounded p-2 text-slate-500 transition-colors hover:bg-slate-200 dark:hover:bg-zinc-800"
+                            title="Type de tâche"
                         >
                             <TypeIcon
                                 className={`h-5 w-5 ${getTypeConfig(taskType).color}`}
@@ -185,7 +220,7 @@ export default function TaskForm() {
                         )}
                     </div>
 
-                    {/* Pop-up Priorité */}
+                    {/* Pop-up Sélection Niveau d'Énergie */}
                     <div className="relative">
                         <button
                             type="button"
@@ -258,7 +293,7 @@ export default function TaskForm() {
                         )}
                     </div>
 
-                    {/* Overflow Tags */}
+                    {/* Le Chevron de TickTick pour l'accès aux options secondaires */}
                     <div className="relative border-l border-slate-200 pl-1 ml-1 dark:border-zinc-800">
                         <button
                             type="button"
