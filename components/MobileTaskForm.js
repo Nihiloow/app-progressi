@@ -7,6 +7,7 @@ import {
     FocusIcon,
     ListIcon,
     InboxIcon,
+    TagIcon, // Ajout du TagIcon
 } from "@/components/ui/icons";
 
 export default function MobileTaskForm({ isOpen, onClose }) {
@@ -38,13 +39,25 @@ export default function MobileTaskForm({ isOpen, onClose }) {
     const getPriorityConfig = (level) => {
         switch (level) {
             case "HIGH":
-                return { color: "text-red-500", bg: "bg-red-50" };
+                return {
+                    color: "text-red-500",
+                    bg: "bg-red-50 dark:bg-red-500/10",
+                };
             case "MEDIUM":
-                return { color: "text-amber-500", bg: "bg-amber-50" };
+                return {
+                    color: "text-amber-500",
+                    bg: "bg-amber-50 dark:bg-amber-500/10",
+                };
             case "LOW":
-                return { color: "text-blue-500", bg: "bg-blue-50" };
+                return {
+                    color: "text-blue-500",
+                    bg: "bg-blue-50 dark:bg-blue-500/10",
+                };
             default:
-                return { color: "text-slate-400", bg: "transparent" };
+                return {
+                    color: "text-slate-400 dark:text-zinc-400",
+                    bg: "transparent",
+                };
         }
     };
     const getTypeConfig = (type) => {
@@ -86,7 +99,6 @@ export default function MobileTaskForm({ isOpen, onClose }) {
 
                     <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500">
                         <div className="flex items-center gap-3 text-xl">
-                            {/* Date Invisible */}
                             <div className="relative flex items-center">
                                 <input
                                     type="date"
@@ -111,7 +123,6 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                 </button>
                             </div>
 
-                            {/* Type Menu */}
                             <div className="relative">
                                 <button
                                     type="button"
@@ -128,8 +139,9 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                 </button>
                                 {openMenu === "type" && (
                                     <>
+                                        {/* CORRECTIF CASE NOIRE : Ajout de bg-transparent */}
                                         <div
-                                            className="fixed inset-0 z-[80]"
+                                            className="fixed inset-0 z-[80] bg-transparent"
                                             onClick={() => setOpenMenu(null)}
                                         />
                                         <div className="absolute bottom-full left-0 mb-2 w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2">
@@ -185,7 +197,6 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                 )}
                             </div>
 
-                            {/* Priority Menu */}
                             <div className="relative">
                                 <button
                                     type="button"
@@ -202,8 +213,9 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                 </button>
                                 {openMenu === "priority" && (
                                     <>
+                                        {/* CORRECTIF CASE NOIRE : Ajout de bg-transparent */}
                                         <div
-                                            className="fixed inset-0 z-[80]"
+                                            className="fixed inset-0 z-[80] bg-transparent"
                                             onClick={() => setOpenMenu(null)}
                                         />
                                         <div className="absolute bottom-full left-0 mb-2 w-40 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2">
@@ -259,6 +271,52 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                                     <span className="text-slate-500">
                                                         Aucune
                                                     </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* LE BOUTON PLUS AVEC LES TAGS SUR MOBILE */}
+                            <div className="relative border-l border-slate-200 pl-1 ml-1 dark:border-zinc-800">
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setOpenMenu(
+                                            openMenu === "more" ? null : "more",
+                                        )
+                                    }
+                                    className="flex rounded p-1.5 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                                >
+                                    <svg
+                                        className={`h-5 w-5 transition-transform ${openMenu === "more" ? "rotate-180" : ""}`}
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M19 9l-7 7-7-7"
+                                        />
+                                    </svg>
+                                </button>
+                                {openMenu === "more" && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-[80] bg-transparent"
+                                            onClick={() => setOpenMenu(null)}
+                                        />
+                                        <div className="absolute bottom-full right-0 mb-2 w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2">
+                                            <div className="flex flex-col p-1 text-sm font-medium">
+                                                <button
+                                                    type="button"
+                                                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-left text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-700"
+                                                >
+                                                    <TagIcon className="h-4 w-4 text-slate-400" />{" "}
+                                                    Étiquettes
                                                 </button>
                                             </div>
                                         </div>

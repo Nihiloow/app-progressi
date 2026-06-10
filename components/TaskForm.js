@@ -12,10 +12,9 @@ import {
 } from "@/components/ui/icons";
 
 export default function TaskForm() {
-    const [openMenu, setOpenMenu] = useState(null); // "priority", "type", "more"
+    const [openMenu, setOpenMenu] = useState(null);
     const containerRef = useRef(null);
 
-    // Extraction de TOUTE la logique et des états (Date incluse !) depuis le Hook
     const {
         title,
         setTitle,
@@ -31,6 +30,7 @@ export default function TaskForm() {
         handleSubmit,
     } = useTaskFormLogic(() => setOpenMenu(null));
 
+    // CORRECTIF CONSOLE : Utilisation de pointerdown au lieu de mousedown
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (
@@ -39,12 +39,11 @@ export default function TaskForm() {
             )
                 setOpenMenu(null);
         };
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("pointerdown", handleClickOutside);
         return () =>
-            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("pointerdown", handleClickOutside);
     }, []);
 
-    // Configuration des rendus graphiques
     const getPriorityConfig = (level) => {
         switch (level) {
             case "HIGH":
@@ -94,7 +93,6 @@ export default function TaskForm() {
                 onSubmit={handleSubmit}
                 className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 pr-3 shadow-sm transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 dark:border-zinc-800 dark:bg-zinc-900/50 dark:focus-within:bg-zinc-950"
             >
-                {/* Icône Déco + */}
                 <div className="pl-3 text-slate-400">
                     <svg
                         className="h-5 w-5"
@@ -111,10 +109,9 @@ export default function TaskForm() {
                     </svg>
                 </div>
 
-                {/* Champ d'écriture principal */}
                 <input
                     type="text"
-                    placeholder="Que veux-tu accomplir ? (Appuie sur Entrée pour forger)"
+                    placeholder="Que veux-tu accomplir ?"
                     className="flex-1 bg-transparent p-2 text-slate-800 placeholder-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder-zinc-500 font-medium"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -129,9 +126,8 @@ export default function TaskForm() {
                     Submit
                 </button>
 
-                {/* --- CONFIGURATION DES PARAMÈTRES (BARRE D'OUTILS) --- */}
                 <div className="flex items-center gap-1 border-l border-slate-200 pl-2 dark:border-zinc-800">
-                    {/* LE SÉLECTEUR DE DATE INTERACTIF ET INVISIBLE */}
+                    {/* CORRECTIF : LE SÉLECTEUR DE DATE EST DE RETOUR */}
                     <div className="relative flex items-center">
                         <input
                             type="date"
@@ -159,7 +155,6 @@ export default function TaskForm() {
                         </button>
                     </div>
 
-                    {/* Pop-up Sélection Type de charge cognitive */}
                     <div className="relative">
                         <button
                             type="button"
@@ -220,7 +215,6 @@ export default function TaskForm() {
                         )}
                     </div>
 
-                    {/* Pop-up Sélection Niveau d'Énergie */}
                     <div className="relative">
                         <button
                             type="button"
@@ -293,7 +287,6 @@ export default function TaskForm() {
                         )}
                     </div>
 
-                    {/* Le Chevron de TickTick pour l'accès aux options secondaires */}
                     <div className="relative border-l border-slate-200 pl-1 ml-1 dark:border-zinc-800">
                         <button
                             type="button"
