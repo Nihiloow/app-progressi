@@ -1,133 +1,65 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-const FlagIcon = ({ className }) => (
-    <svg
-        className={className}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth="2"
-    >
-        <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-        />
-    </svg>
-);
+import { useTaskFormLogic } from "@/hooks/useTaskFormLogic";
+import {
+    LightningIcon,
+    FocusIcon,
+    ListIcon,
+    InboxIcon,
+} from "@/components/ui/icons";
 
 export default function MobileTaskForm({ isOpen, onClose }) {
-    const [title, setTitle] = useState("");
-    const [priority, setPriority] = useState("NONE");
-    const [taskType, setTaskType] = useState("SHALLOW_WORK");
-    const [dueDate, setDueDate] = useState("");
-
-    const [isPriorityMenuOpen, setIsPriorityMenuOpen] = useState(false);
-    const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
-
+    const [openMenu, setOpenMenu] = useState(null);
     const inputRef = useRef(null);
-    const queryClient = useQueryClient();
+
+    const {
+        title,
+        setTitle,
+        priority,
+        setPriority,
+        taskType,
+        setTaskType,
+        dueDate,
+        setDueDate,
+        isPending,
+        handleSubmit,
+    } = useTaskFormLogic(() => {
+        setOpenMenu(null);
+        onClose();
+    });
 
     useEffect(() => {
         if (isOpen && inputRef.current)
             setTimeout(() => inputRef.current.focus(), 100);
-    }, [isOpen]);
-
-    useEffect(() => {
-        if (!isOpen) {
-            setIsPriorityMenuOpen(false);
-            setIsTypeMenuOpen(false);
-        }
+        if (!isOpen) setOpenMenu(null);
     }, [isOpen]);
 
     const getPriorityConfig = (level) => {
         switch (level) {
             case "HIGH":
-                return {
-                    color: "text-red-500",
-                    bg: "bg-red-50",
-                    label: "Haute",
-                };
+                return { color: "text-red-500", bg: "bg-red-50" };
             case "MEDIUM":
-                return {
-                    color: "text-amber-500",
-                    bg: "bg-amber-50",
-                    label: "Moyenne",
-                };
+                return { color: "text-amber-500", bg: "bg-amber-50" };
             case "LOW":
-                return {
-                    color: "text-blue-500",
-                    bg: "bg-blue-50",
-                    label: "Basse",
-                };
+                return { color: "text-blue-500", bg: "bg-blue-50" };
             default:
-                return {
-                    color: "text-slate-400",
-                    bg: "transparent",
-                    label: "Priorité",
-                };
+                return { color: "text-slate-400", bg: "transparent" };
         }
     };
-
     const getTypeConfig = (type) => {
         switch (type) {
             case "DEEP_WORK":
-                return {
-                    icon: "🎯",
-                    label: "Deep Focus",
-                    color: "text-purple-500",
-                };
+                return { icon: FocusIcon, color: "text-purple-500" };
             case "ADMINISTRATIVE":
-                return { icon: "✉️", label: "Admin", color: "text-slate-500" };
+                return { icon: InboxIcon, color: "text-slate-500" };
             default:
-                return {
-                    icon: "📋",
-                    label: "Shallow Work",
-                    color: "text-indigo-500",
-                };
+                return { icon: ListIcon, color: "text-indigo-500" };
         }
     };
 
     const currentPriority = getPriorityConfig(priority);
-    const currentType = getTypeConfig(taskType);
-
-    const createTaskMutation = useMutation({
-        mutationFn: async (newTask) => {
-            const res = await fetch("/api/tasks", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newTask),
-            });
-            if (!res.ok) throw new Error("Erreur serveur");
-            return res.json();
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["tasks"] });
-            setTitle("");
-            setPriority("NONE");
-            setTaskType("SHALLOW_WORK");
-            setDueDate("");
-            setIsPriorityMenuOpen(false);
-            setIsTypeMenuOpen(false);
-            onClose();
-        },
-    });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!title.trim() || createTaskMutation.isPending) return;
-
-        createTaskMutation.mutate({
-            title,
-            priority,
-            taskType,
-            difficulty: taskType === "DEEP_WORK" ? 3 : 1, // Le Deep Work donne + d'XP
-            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-        });
-    };
+    const TypeIcon = getTypeConfig(taskType).icon;
 
     return (
         <>
@@ -149,12 +81,12 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="Que voulez-vous faire ?"
                         className="w-full bg-transparent text-lg font-medium text-slate-800 placeholder-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder-zinc-500"
-                        disabled={createTaskMutation.isPending}
+                        disabled={isPending}
                     />
 
                     <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500">
                         <div className="flex items-center gap-3 text-xl">
-                            {/* Bouton Date avec Input Natif Invisible */}
+                            {/* Date Invisible */}
                             <div className="relative flex items-center">
                                 <input
                                     type="date"
@@ -179,30 +111,28 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                 </button>
                             </div>
 
-                            {/* Menu Type de Tâche */}
+                            {/* Type Menu */}
                             <div className="relative">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setIsTypeMenuOpen(!isTypeMenuOpen);
-                                        setIsPriorityMenuOpen(false);
-                                    }}
+                                    onClick={() =>
+                                        setOpenMenu(
+                                            openMenu === "type" ? null : "type",
+                                        )
+                                    }
                                     className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"
                                 >
-                                    <span className="text-base">
-                                        {currentType.icon}
-                                    </span>
+                                    <TypeIcon
+                                        className={`h-5 w-5 ${getTypeConfig(taskType).color}`}
+                                    />
                                 </button>
-
-                                {isTypeMenuOpen && (
+                                {openMenu === "type" && (
                                     <>
                                         <div
                                             className="fixed inset-0 z-[80]"
-                                            onClick={() =>
-                                                setIsTypeMenuOpen(false)
-                                            }
+                                            onClick={() => setOpenMenu(null)}
                                         />
-                                        <div className="absolute bottom-full left-0 mb-2 w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                        <div className="absolute bottom-full left-0 mb-2 w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2">
                                             <div className="flex flex-col py-1">
                                                 <button
                                                     type="button"
@@ -210,13 +140,11 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                                         setTaskType(
                                                             "DEEP_WORK",
                                                         );
-                                                        setIsTypeMenuOpen(
-                                                            false,
-                                                        );
+                                                        setOpenMenu(null);
                                                     }}
                                                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <span>🎯</span>{" "}
+                                                    <FocusIcon className="h-4 w-4 text-purple-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Deep Focus
                                                     </span>
@@ -227,13 +155,11 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                                         setTaskType(
                                                             "SHALLOW_WORK",
                                                         );
-                                                        setIsTypeMenuOpen(
-                                                            false,
-                                                        );
+                                                        setOpenMenu(null);
                                                     }}
                                                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <span>📋</span>{" "}
+                                                    <ListIcon className="h-4 w-4 text-indigo-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Shallow Work
                                                     </span>
@@ -244,13 +170,11 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                                         setTaskType(
                                                             "ADMINISTRATIVE",
                                                         );
-                                                        setIsTypeMenuOpen(
-                                                            false,
-                                                        );
+                                                        setOpenMenu(null);
                                                     }}
                                                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <span>✉️</span>{" "}
+                                                    <InboxIcon className="h-4 w-4 text-slate-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Admin
                                                     </span>
@@ -261,42 +185,38 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                 )}
                             </div>
 
-                            {/* Menu Priorité */}
+                            {/* Priority Menu */}
                             <div className="relative">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        setIsPriorityMenuOpen(
-                                            !isPriorityMenuOpen,
-                                        );
-                                        setIsTypeMenuOpen(false);
-                                    }}
+                                    onClick={() =>
+                                        setOpenMenu(
+                                            openMenu === "priority"
+                                                ? null
+                                                : "priority",
+                                        )
+                                    }
                                     className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${currentPriority.color} ${currentPriority.bg} hover:bg-slate-100 dark:hover:bg-zinc-800`}
                                 >
-                                    <FlagIcon className="h-5 w-5" />
+                                    <LightningIcon className="h-5 w-5" />
                                 </button>
-
-                                {isPriorityMenuOpen && (
+                                {openMenu === "priority" && (
                                     <>
                                         <div
                                             className="fixed inset-0 z-[80]"
-                                            onClick={() =>
-                                                setIsPriorityMenuOpen(false)
-                                            }
+                                            onClick={() => setOpenMenu(null)}
                                         />
-                                        <div className="absolute bottom-full left-0 mb-2 w-40 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                        <div className="absolute bottom-full left-0 mb-2 w-40 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2">
                                             <div className="flex flex-col py-1">
                                                 <button
                                                     type="button"
                                                     onClick={() => {
                                                         setPriority("HIGH");
-                                                        setIsPriorityMenuOpen(
-                                                            false,
-                                                        );
+                                                        setOpenMenu(null);
                                                     }}
                                                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <FlagIcon className="h-5 w-5 text-red-500" />{" "}
+                                                    <LightningIcon className="h-4 w-4 text-red-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Haute
                                                     </span>
@@ -305,13 +225,11 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                                     type="button"
                                                     onClick={() => {
                                                         setPriority("MEDIUM");
-                                                        setIsPriorityMenuOpen(
-                                                            false,
-                                                        );
+                                                        setOpenMenu(null);
                                                     }}
                                                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <FlagIcon className="h-5 w-5 text-amber-500" />{" "}
+                                                    <LightningIcon className="h-4 w-4 text-amber-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Moyenne
                                                     </span>
@@ -320,13 +238,11 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                                     type="button"
                                                     onClick={() => {
                                                         setPriority("LOW");
-                                                        setIsPriorityMenuOpen(
-                                                            false,
-                                                        );
+                                                        setOpenMenu(null);
                                                     }}
                                                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <FlagIcon className="h-5 w-5 text-blue-500" />{" "}
+                                                    <LightningIcon className="h-4 w-4 text-blue-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Basse
                                                     </span>
@@ -335,13 +251,11 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                                     type="button"
                                                     onClick={() => {
                                                         setPriority("NONE");
-                                                        setIsPriorityMenuOpen(
-                                                            false,
-                                                        );
+                                                        setOpenMenu(null);
                                                     }}
                                                     className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50 border-t border-slate-100 dark:border-zinc-700/50 mt-1"
                                                 >
-                                                    <FlagIcon className="h-5 w-5 text-slate-400" />{" "}
+                                                    <LightningIcon className="h-4 w-4 text-slate-400" />{" "}
                                                     <span className="text-slate-500">
                                                         Aucune
                                                     </span>
@@ -355,12 +269,10 @@ export default function MobileTaskForm({ isOpen, onClose }) {
 
                         <button
                             type="submit"
-                            disabled={
-                                !title.trim() || createTaskMutation.isPending
-                            }
-                            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${createTaskMutation.isPending || !title.trim() ? "bg-slate-200 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600" : "bg-indigo-500 text-white active:scale-95 dark:bg-indigo-600"}`}
+                            disabled={!title.trim() || isPending}
+                            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${isPending || !title.trim() ? "bg-slate-200 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600" : "bg-indigo-500 text-white active:scale-95 dark:bg-indigo-600"}`}
                         >
-                            {createTaskMutation.isPending ? (
+                            {isPending ? (
                                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
                             ) : (
                                 <svg

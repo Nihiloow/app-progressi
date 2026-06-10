@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import TaskItem from "@/components/TaskItem";
+import { useRouter } from "next/navigation";
 import TaskForm from "@/components/TaskForm";
 import TaskDetails from "@/components/TaskDetails";
 import MobileTaskForm from "@/components/MobileTaskForm";
-import { useRouter } from "next/navigation";
+import TaskList from "@/components/TaskList";
 
 export default function DashboardPage() {
     const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -66,25 +66,15 @@ export default function DashboardPage() {
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-6">
-                    <div className="mx-auto max-w-3xl space-y-3">
-                        {tasks?.length === 0 ? (
-                            <p className="mt-10 text-center text-sm text-slate-400">
-                                Tu n'as visiblement rien à faire aujourd'hui...
-                            </p>
-                        ) : (
-                            tasks?.map((task) => (
-                                <TaskItem
-                                    key={task.id}
-                                    task={task}
-                                    isSelected={task.id === selectedTaskId}
-                                    onSelect={setSelectedTaskId}
-                                />
-                            ))
-                        )}
+                    <div className="mx-auto max-w-3xl">
+                        <TaskList
+                            tasks={tasks}
+                            selectedTaskId={selectedTaskId}
+                            onSelectTask={setSelectedTaskId}
+                        />
                     </div>
                 </div>
 
-                {/* bouton d'ajout mobile */}
                 <button
                     onClick={() => setIsMobileFormOpen(true)}
                     className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 md:hidden"
@@ -106,10 +96,7 @@ export default function DashboardPage() {
                 </button>
             </main>
 
-            {/* panneau de détails sur Bureau */}
             <TaskDetails task={selectedTask} />
-
-            {/* tiroir d'ajout sur Mobile */}
             <MobileTaskForm
                 isOpen={isMobileFormOpen}
                 onClose={() => setIsMobileFormOpen(false)}
