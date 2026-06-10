@@ -58,6 +58,9 @@ export async function POST(request) {
             data: {
                 title: result.data.title,
                 difficulty: result.data.difficulty,
+                priority: result.data.priority,
+                taskType: result.data.taskType,
+                dueDate: result.data.dueDate,
                 userId: userId,
             },
         });

@@ -31,9 +31,9 @@ enum Priority {
 
 // charge cognitive
 enum TaskType {
-  DEEP_WORK       // Concentration intense (Code, Architecture, Stratégie)
-  SHALLOW_WORK    // Tâches légères / Routines
-  ADMINISTRATIVE  // Mails, organisation, administratif
+  DEEP_WORK       
+  SHALLOW_WORK 
+  ADMINISTRATIVE
   NONE
 }
 
@@ -41,17 +41,15 @@ enum TaskType {
 model Task {
   id          String   @id @default(uuid())
   title       String
-  difficulty  Int      @default(1) // On conserve l'impact sur l'XP (1, 2, 3)
+  difficulty  Int      @default(1)
   isCompleted Boolean  @default(false)
+  dueDate     DateTime?
   
-  // Nouveaux champs avec valeurs par défaut pour ne pas casser l'existant
   priority    Priority @default(NONE)
   taskType    TaskType @default(SHALLOW_WORK)
   
-  // Relation Many-to-Many implicite avec les Tags
   tags        Tag[]
   
-  // Relation existante avec l'utilisateur
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
@@ -63,15 +61,15 @@ model Task {
 model Tag {
   id        String   @id @default(uuid())
   name      String
-  color     String?  // Optionnel : pour donner un style visuel à l'étiquette
+  color     String?
   
-  // Relation inverse vers les tâches
+  // relation inverse vers les tâches
   tasks     Task[]
   
-  // Un tag appartient à un utilisateur spécifique
+  // un tag appartient à un utilisateur spécifique
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Index unique : un utilisateur ne peut pas créer deux fois le même nom de tag
+  // un utilisateur ne peut pas créer deux fois le même nom de tag
   @@unique([name, userId])
 }

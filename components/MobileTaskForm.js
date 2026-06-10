@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-// Composant SVG réutilisable pour le drapeau
 const FlagIcon = ({ className }) => (
     <svg
         className={className}
@@ -22,56 +21,78 @@ const FlagIcon = ({ className }) => (
 
 export default function MobileTaskForm({ isOpen, onClose }) {
     const [title, setTitle] = useState("");
-    const [difficulty, setDifficulty] = useState(1); // 1: Facile, 2: Moyen, 3: Difficile
+    const [priority, setPriority] = useState("NONE");
+    const [taskType, setTaskType] = useState("SHALLOW_WORK");
+    const [dueDate, setDueDate] = useState("");
+
     const [isPriorityMenuOpen, setIsPriorityMenuOpen] = useState(false);
+    const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
 
     const inputRef = useRef(null);
     const queryClient = useQueryClient();
 
-    // UX : Auto-focus à l'ouverture
     useEffect(() => {
-        if (isOpen && inputRef.current) {
+        if (isOpen && inputRef.current)
             setTimeout(() => inputRef.current.focus(), 100);
-        }
     }, [isOpen]);
 
-    // CORRECTIF : Nettoyage forcé à la fermeture du tiroir principal
     useEffect(() => {
         if (!isOpen) {
             setIsPriorityMenuOpen(false);
+            setIsTypeMenuOpen(false);
         }
     }, [isOpen]);
 
-    const getDifficultyConfig = (level) => {
+    const getPriorityConfig = (level) => {
         switch (level) {
-            case 3:
+            case "HIGH":
                 return {
-                    color: "text-red-500 dark:text-red-400",
-                    bg: "bg-red-50 dark:bg-red-500/10",
+                    color: "text-red-500",
+                    bg: "bg-red-50",
                     label: "Haute",
                 };
-            case 2:
+            case "MEDIUM":
                 return {
-                    color: "text-amber-500 dark:text-amber-400",
-                    bg: "bg-amber-50 dark:bg-amber-500/10",
+                    color: "text-amber-500",
+                    bg: "bg-amber-50",
                     label: "Moyenne",
                 };
-            case 1:
+            case "LOW":
                 return {
-                    color: "text-blue-500 dark:text-blue-400",
-                    bg: "bg-blue-50 dark:bg-blue-500/10",
+                    color: "text-blue-500",
+                    bg: "bg-blue-50",
                     label: "Basse",
                 };
             default:
                 return {
-                    color: "text-slate-400 dark:text-zinc-500",
+                    color: "text-slate-400",
                     bg: "transparent",
                     label: "Priorité",
                 };
         }
     };
 
-    const currentConfig = getDifficultyConfig(difficulty);
+    const getTypeConfig = (type) => {
+        switch (type) {
+            case "DEEP_WORK":
+                return {
+                    icon: "🎯",
+                    label: "Deep Focus",
+                    color: "text-purple-500",
+                };
+            case "ADMINISTRATIVE":
+                return { icon: "✉️", label: "Admin", color: "text-slate-500" };
+            default:
+                return {
+                    icon: "📋",
+                    label: "Shallow Work",
+                    color: "text-indigo-500",
+                };
+        }
+    };
+
+    const currentPriority = getPriorityConfig(priority);
+    const currentType = getTypeConfig(taskType);
 
     const createTaskMutation = useMutation({
         mutationFn: async (newTask) => {
@@ -86,8 +107,11 @@ export default function MobileTaskForm({ isOpen, onClose }) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tasks"] });
             setTitle("");
-            setDifficulty(1);
+            setPriority("NONE");
+            setTaskType("SHALLOW_WORK");
+            setDueDate("");
             setIsPriorityMenuOpen(false);
+            setIsTypeMenuOpen(false);
             onClose();
         },
     });
@@ -95,30 +119,27 @@ export default function MobileTaskForm({ isOpen, onClose }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!title.trim() || createTaskMutation.isPending) return;
-        createTaskMutation.mutate({ title, difficulty });
-    };
 
-    const handleBackdropClick = (e) => {
-        if (e.target === e.currentTarget) onClose();
+        createTaskMutation.mutate({
+            title,
+            priority,
+            taskType,
+            difficulty: taskType === "DEEP_WORK" ? 3 : 1, // Le Deep Work donne + d'XP
+            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        });
     };
 
     return (
         <>
-            {/* Fond sombre du tiroir principal */}
             <div
-                className={`fixed inset-0 z-[60] bg-black/40 transition-opacity duration-300 md:hidden ${
-                    isOpen
-                        ? "pointer-events-auto opacity-100"
-                        : "pointer-events-none opacity-0"
-                }`}
-                onClick={handleBackdropClick}
+                className={`fixed inset-0 z-[60] bg-black/40 transition-opacity duration-300 md:hidden ${isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}`}
+                onClick={(e) => {
+                    if (e.target === e.currentTarget) onClose();
+                }}
             />
 
-            {/* Tiroir coulissant */}
             <div
-                className={`fixed bottom-0 left-0 z-[70] w-full transform rounded-t-2xl bg-white p-4 shadow-2xl transition-transform duration-300 ease-out md:hidden dark:bg-zinc-900 pb-safe ${
-                    isOpen ? "translate-y-0" : "translate-y-full"
-                }`}
+                className={`fixed bottom-0 left-0 z-[70] w-full transform rounded-t-2xl bg-white p-4 shadow-2xl transition-transform duration-300 ease-out md:hidden dark:bg-zinc-900 pb-safe ${isOpen ? "translate-y-0" : "translate-y-full"}`}
             >
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <input
@@ -131,88 +152,198 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                         disabled={createTaskMutation.isPending}
                     />
 
-                    <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500 relative">
-                        <div className="flex items-center gap-4 text-xl">
-                            <button
-                                type="button"
-                                className="flex items-center gap-1 rounded text-sm font-medium text-indigo-500 transition-colors active:text-indigo-600 dark:text-indigo-400"
-                            >
-                                Aujourd'hui
-                            </button>
+                    <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500">
+                        <div className="flex items-center gap-3 text-xl">
+                            {/* Bouton Date avec Input Natif Invisible */}
+                            <div className="relative flex items-center">
+                                <input
+                                    type="date"
+                                    value={dueDate}
+                                    onChange={(e) => setDueDate(e.target.value)}
+                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                                />
+                                <button
+                                    type="button"
+                                    className={`flex items-center gap-1 rounded px-2 py-1 text-sm font-medium transition-colors ${dueDate ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400" : "text-indigo-500 dark:text-indigo-400"}`}
+                                >
+                                    📅{" "}
+                                    {dueDate
+                                        ? new Date(dueDate).toLocaleDateString(
+                                              "fr-FR",
+                                              {
+                                                  day: "numeric",
+                                                  month: "short",
+                                              },
+                                          )
+                                        : "Date"}
+                                </button>
+                            </div>
 
-                            {/* Système de drapeaux */}
+                            {/* Menu Type de Tâche */}
                             <div className="relative">
                                 <button
                                     type="button"
-                                    onClick={() =>
+                                    onClick={() => {
+                                        setIsTypeMenuOpen(!isTypeMenuOpen);
+                                        setIsPriorityMenuOpen(false);
+                                    }}
+                                    className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800"
+                                >
+                                    <span className="text-base">
+                                        {currentType.icon}
+                                    </span>
+                                </button>
+
+                                {isTypeMenuOpen && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-[80]"
+                                            onClick={() =>
+                                                setIsTypeMenuOpen(false)
+                                            }
+                                        />
+                                        <div className="absolute bottom-full left-0 mb-2 w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                            <div className="flex flex-col py-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setTaskType(
+                                                            "DEEP_WORK",
+                                                        );
+                                                        setIsTypeMenuOpen(
+                                                            false,
+                                                        );
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                                                >
+                                                    <span>🎯</span>{" "}
+                                                    <span className="text-slate-700 dark:text-slate-200">
+                                                        Deep Focus
+                                                    </span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setTaskType(
+                                                            "SHALLOW_WORK",
+                                                        );
+                                                        setIsTypeMenuOpen(
+                                                            false,
+                                                        );
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                                                >
+                                                    <span>📋</span>{" "}
+                                                    <span className="text-slate-700 dark:text-slate-200">
+                                                        Shallow Work
+                                                    </span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setTaskType(
+                                                            "ADMINISTRATIVE",
+                                                        );
+                                                        setIsTypeMenuOpen(
+                                                            false,
+                                                        );
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                                                >
+                                                    <span>✉️</span>{" "}
+                                                    <span className="text-slate-700 dark:text-slate-200">
+                                                        Admin
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Menu Priorité */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => {
                                         setIsPriorityMenuOpen(
                                             !isPriorityMenuOpen,
-                                        )
-                                    }
-                                    className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${currentConfig.color} ${currentConfig.bg} hover:bg-slate-100 dark:hover:bg-zinc-800`}
+                                        );
+                                        setIsTypeMenuOpen(false);
+                                    }}
+                                    className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${currentPriority.color} ${currentPriority.bg} hover:bg-slate-100 dark:hover:bg-zinc-800`}
                                 >
                                     <FlagIcon className="h-5 w-5" />
                                 </button>
 
                                 {isPriorityMenuOpen && (
                                     <>
-                                        {/* CORRECTIF : Z-index à 80 pour être strictement au-dessus du tiroir (70) */}
                                         <div
                                             className="fixed inset-0 z-[80]"
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Empêche le clic de traverser
-                                                setIsPriorityMenuOpen(false);
-                                            }}
+                                            onClick={() =>
+                                                setIsPriorityMenuOpen(false)
+                                            }
                                         />
-
-                                        {/* Boîte du menu (Z-index 90) */}
                                         <div className="absolute bottom-full left-0 mb-2 w-40 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 z-[90] dark:bg-zinc-800 dark:ring-zinc-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
                                             <div className="flex flex-col py-1">
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        setDifficulty(3);
+                                                        setPriority("HIGH");
                                                         setIsPriorityMenuOpen(
                                                             false,
                                                         );
                                                     }}
-                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <FlagIcon className="h-5 w-5 text-red-500 dark:text-red-400" />
+                                                    <FlagIcon className="h-5 w-5 text-red-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Haute
                                                     </span>
                                                 </button>
-
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        setDifficulty(2);
+                                                        setPriority("MEDIUM");
                                                         setIsPriorityMenuOpen(
                                                             false,
                                                         );
                                                     }}
-                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <FlagIcon className="h-5 w-5 text-amber-500 dark:text-amber-400" />
+                                                    <FlagIcon className="h-5 w-5 text-amber-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Moyenne
                                                     </span>
                                                 </button>
-
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        setDifficulty(1);
+                                                        setPriority("LOW");
                                                         setIsPriorityMenuOpen(
                                                             false,
                                                         );
                                                     }}
-                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                                                 >
-                                                    <FlagIcon className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                                                    <FlagIcon className="h-5 w-5 text-blue-500" />{" "}
                                                     <span className="text-slate-700 dark:text-slate-200">
                                                         Basse
+                                                    </span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setPriority("NONE");
+                                                        setIsPriorityMenuOpen(
+                                                            false,
+                                                        );
+                                                    }}
+                                                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50 border-t border-slate-100 dark:border-zinc-700/50 mt-1"
+                                                >
+                                                    <FlagIcon className="h-5 w-5 text-slate-400" />{" "}
+                                                    <span className="text-slate-500">
+                                                        Aucune
                                                     </span>
                                                 </button>
                                             </div>
@@ -227,11 +358,7 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                             disabled={
                                 !title.trim() || createTaskMutation.isPending
                             }
-                            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${
-                                createTaskMutation.isPending || !title.trim()
-                                    ? "bg-slate-200 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600"
-                                    : "bg-indigo-500 text-white active:scale-95 dark:bg-indigo-600"
-                            }`}
+                            className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${createTaskMutation.isPending || !title.trim() ? "bg-slate-200 text-slate-400 dark:bg-zinc-800 dark:text-zinc-600" : "bg-indigo-500 text-white active:scale-95 dark:bg-indigo-600"}`}
                         >
                             {createTaskMutation.isPending ? (
                                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
