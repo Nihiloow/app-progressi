@@ -1,47 +1,57 @@
+// Destination : components/TaskItem.js (REMPLACE l'existant)
+
 "use client";
 
-import { useCompleteTask } from "@/hooks/useCompleteTask";
-import { useUpdateTask } from "@/hooks/useUpdateTask"; // Nouveau hook
+import { useChangeTaskStatus } from "@/hooks/useChangeTaskStatus";
+import {
+    getPriorityConfig,
+    getTypeConfig,
+} from "@/components/ui/taskAppearance";
 
 export default function TaskItem({ task, isSelected, onSelect }) {
-    const completeTaskMutation = useCompleteTask();
-    const updateTaskMutation = useUpdateTask();
+    const changeStatusMutation = useChangeTaskStatus();
+    const isPending = changeStatusMutation.isPending;
 
-    const isPending =
-        completeTaskMutation.isPending || updateTaskMutation.isPending;
+    const isDone = task.status === "DONE";
+    const isAbandoned = task.status === "WONT_DO";
+    const isInactive = isDone || isAbandoned;
 
-    const handleToggleComplete = (e) => {
+    const priorityConfig = getPriorityConfig(task.priority);
+    const TypeIcon = getTypeConfig(task.taskType).icon;
+
+    const handleToggleStatus = (e) => {
         e.stopPropagation();
 
-        if (!task.isCompleted) {
-            completeTaskMutation.mutate(task.id);
-        } else {
-            updateTaskMutation.mutate({
-                id: task.id,
-                data: { isCompleted: false },
-            });
-        }
+        // TODO → DONE (gain d'XP) ; DONE → TODO (remboursement) ;
+        // WONT_DO → TODO (réactivation, neutre). Le serveur arbitre tout.
+        const nextStatus = task.status === "TODO" ? "DONE" : "TODO";
+        changeStatusMutation.mutate({ taskId: task.id, status: nextStatus });
     };
 
     return (
         <div
             onClick={() => onSelect(task.id)}
-            className={`flex items-center gap-4 p-3 border rounded-xl transition-all duration-200 cursor-pointer ${
+            className={`flex cursor-pointer items-center gap-4 rounded-xl border p-3 transition-all duration-200 ${
                 isSelected
                     ? "border-indigo-500 bg-indigo-50/50 shadow-sm dark:border-indigo-500/50 dark:bg-indigo-500/10"
-                    : "bg-white border-slate-200 shadow-sm hover:border-slate-300 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700"
-            } ${task.isCompleted ? "opacity-60 bg-slate-50 dark:bg-zinc-950" : ""}`}
+                    : "border-slate-200 bg-white shadow-sm hover:border-slate-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+            } ${isInactive ? "bg-slate-50 opacity-60 dark:bg-zinc-950" : ""}`}
         >
             <button
-                onClick={handleToggleComplete}
+                onClick={handleToggleStatus}
                 disabled={isPending}
-                className={`flex-shrink-0 flex h-5 w-5 items-center justify-center rounded-full border transition-all ${
-                    task.isCompleted
+                aria-label={
+                    isDone ? "Annuler la validation" : "Valider la quête"
+                }
+                className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border transition-all ${
+                    isDone
                         ? "border-indigo-500 bg-indigo-500 text-white dark:border-indigo-600 dark:bg-indigo-600"
-                        : "border-slate-300 hover:border-indigo-400 dark:border-zinc-600 dark:hover:border-indigo-500"
-                } ${isPending ? "opacity-50 cursor-wait" : ""}`}
+                        : isAbandoned
+                          ? "border-slate-400 text-slate-400 dark:border-zinc-500 dark:text-zinc-500"
+                          : "border-slate-300 hover:border-indigo-400 dark:border-zinc-600 dark:hover:border-indigo-500"
+                } ${isPending ? "cursor-wait opacity-50" : ""}`}
             >
-                {task.isCompleted && (
+                {isDone && (
                     <svg
                         className="h-3.5 w-3.5"
                         fill="none"
@@ -56,29 +66,52 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                         />
                     </svg>
                 )}
+                {isAbandoned && (
+                    <svg
+                        className="h-3 w-3"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                    </svg>
+                )}
             </button>
 
-            <div className="flex flex-col flex-1 overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-hidden">
                 <span
                     className={`truncate text-sm font-medium transition-all ${
-                        task.isCompleted
-                            ? "line-through text-slate-400 dark:text-zinc-600"
+                        isInactive
+                            ? "text-slate-400 line-through dark:text-zinc-600"
                             : "text-slate-800 dark:text-slate-200"
                     }`}
                 >
                     {task.title}
                 </span>
 
-                <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500">
-                        {task.priority !== "NONE"
-                            ? task.priority
-                            : task.difficulty === 1
-                              ? "Facile"
-                              : task.difficulty === 2
-                                ? "Moyen"
-                                : "Difficile"}
-                    </span>
+                <div className="mt-1 flex items-center gap-2">
+                    {task.priority !== "NONE" && (
+                        <span
+                            className={`text-[10px] font-bold uppercase ${priorityConfig.color}`}
+                        >
+                            {priorityConfig.label}
+                        </span>
+                    )}
+                    {task.taskType !== "NONE" && (
+                        <TypeIcon
+                            className={`h-3.5 w-3.5 ${getTypeConfig(task.taskType).color}`}
+                        />
+                    )}
+                    {isAbandoned && (
+                        <span className="text-[10px] font-medium uppercase text-slate-400 dark:text-zinc-500">
+                            Ne sera pas faite
+                        </span>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,10 +1,17 @@
+// ─────────────────────────────────────────────────────────────────────────
+// Destination : hooks/useTaskFormLogic.js (REMPLACE l'existant)
+// ─────────────────────────────────────────────────────────────────────────
+
 import { useState } from "react";
 import { useCreateTask } from "@/hooks/useCreateTask";
 
+// Logique partagée du formulaire de création (PC et mobile) : le client
+// n'envoie que les champs du schéma de création — ni difficulté ni XP,
+// le serveur dérive tout de la priorité.
 export function useTaskFormLogic(onSuccessCallback) {
     const [title, setTitle] = useState("");
     const [priority, setPriority] = useState("NONE");
-    const [taskType, setTaskType] = useState("SHALLOW_WORK");
+    const [taskType, setTaskType] = useState("NONE");
     const [dueDate, setDueDate] = useState("");
 
     const createTaskMutation = useCreateTask();
@@ -18,14 +25,13 @@ export function useTaskFormLogic(onSuccessCallback) {
                 title,
                 priority,
                 taskType,
-                difficulty: taskType === "DEEP_WORK" ? 3 : 1,
                 dueDate: dueDate ? new Date(dueDate).toISOString() : null,
             },
             {
                 onSuccess: () => {
                     setTitle("");
                     setPriority("NONE");
-                    setTaskType("SHALLOW_WORK");
+                    setTaskType("NONE");
                     setDueDate("");
                     if (onSuccessCallback) onSuccessCallback();
                 },
