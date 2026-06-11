@@ -5,23 +5,23 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL") // <-- Ajout de cette ligne vitale
+  directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  pseudo    String
-  xp        Int      @default(0)
-  level     Int      @default(1)
-  tasks     Task[]   
-  tags      Tag[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
 }
 
-// drapeaux de priorité
+// Permet à l'admin de désactiver un compte sans le supprimer (exigence du CDC)
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+// Importance de la tâche (drapeaux façon TickTick) : seule source du barème XP
 enum Priority {
   HIGH
   MEDIUM
@@ -29,47 +29,113 @@ enum Priority {
   NONE
 }
 
-// charge cognitive
+// Nature cognitive de la tâche : axe d'organisation, neutre en XP
 enum TaskType {
-  DEEP_WORK       
-  SHALLOW_WORK 
+  DEEP_WORK
+  SHALLOW_WORK
   ADMINISTRATIVE
   NONE
 }
 
-// modèle Task
-model Task {
-  id          String   @id @default(uuid())
-  title       String
-  difficulty  Int      @default(1)
-  isCompleted Boolean  @default(false)
-  dueDate     DateTime?
-  
-  priority    Priority @default(NONE)
-  taskType    TaskType @default(SHALLOW_WORK)
-  
-  tags        Tag[]
-  
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+// Remplace le booléen isCompleted : WONT_DO = "Ne fera pas" (façon TickTick),
+// distinct de DONE car abandonner une tâche ne rapporte pas d'XP
+enum TaskStatus {
+  TODO
+  DONE
+  WONT_DO
 }
 
-// tags
-model Tag {
-  id        String   @id @default(uuid())
-  name      String
-  color     String?
-  
-  // relation inverse vers les tâches
-  tasks     Task[]
-  
-  // un tag appartient à un utilisateur spécifique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// GAIN à la complétion, REFUND au décochage (montant négatif)
+enum XpEventType {
+  GAIN
+  REFUND
+}
 
-  // un utilisateur ne peut pas créer deux fois le même nom de tag
+// ─── Modèles ─────────────────────────────────────────────────────────────────
+
+model User {
+  id        String        @id @default(uuid())
+  email     String        @unique
+  password  String
+  pseudo    String
+  role      Role          @default(USER)
+  status    AccountStatus @default(ACTIVE)
+  xp        Int           @default(0)
+  level     Int           @default(1)
+  tasks     Task[]
+  tags      Tag[]
+  xpEvents  XpEvent[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  status      TaskStatus @default(TODO)
+  // Figé à la complétion : sert au quota journalier (et non updatedAt,
+  // qui bouge à chaque modification et fausserait le comptage)
+  completedAt DateTime?
+  dueDate     DateTime?
+
+  priority Priority @default(NONE)
+  taskType TaskType @default(NONE)
+
+  tags     Tag[]
+  xpEvents XpEvent[]
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Le quota journalier filtre toujours par (userId, status, completedAt)
+  @@index([userId, status, completedAt])
+}
+
+model Tag {
+  id    String  @id @default(uuid())
+  name  String
+  color String?
+
+  tasks Task[]
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Un utilisateur ne peut pas créer deux fois le même nom de tag
   @@unique([name, userId])
+}
+
+// Livre de comptes de l'XP : source de vérité unique, append-only.
+// Le solde User.xp/level est un cache de lecture maintenu en transaction.
+// Sert aussi de log des actions critiques (exigence du CDC) et alimente
+// les graphiques d'évolution sur 30 jours.
+model XpEvent {
+  id     String      @id @default(uuid())
+  type   XpEventType
+  amount Int // positif pour GAIN, négatif pour REFUND
+
+  // Priorité au moment de la complétion, figée : changer la priorité
+  // d'une tâche complétée ne réécrit pas l'historique
+  priority Priority
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // SetNull : supprimer une tâche ne falsifie pas le livre de comptes
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  // Un REFUND pointe le GAIN qu'il annule ; @unique garantit en base
+  // qu'un même gain ne peut pas être remboursé deux fois
+  revertsEventId String?  @unique
+  revertsEvent   XpEvent? @relation("Reversal", fields: [revertsEventId], references: [id])
+  revertedBy     XpEvent? @relation("Reversal")
+
+  createdAt DateTime @default(now())
+
+  // Les graphiques agrègent toujours par (userId, createdAt)
+  @@index([userId, createdAt])
 }

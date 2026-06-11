@@ -1,24 +1,17 @@
-const xpFloor = {
-    1: 50,
-    2: 100,
-    3: 150,
-};
-
-export const dailyLimits = {
-    1: 5,
-    2: 3,
-    3: 1,
-};
+// Moteur de progression RPG : fonctions pures, sans effet de bord.
+// Le moteur ne connaît ni les priorités ni le barème (responsabilité de
+// core/config/gamification.js) : il reçoit un montant et applique les
+// règles de niveaux. Cela le rend trivial à tester et à faire évoluer.
 
 export function calculateRequiredXP(level) {
     return level * 100;
 }
 
-export function addExperience(currentXp, currentLevel, difficulty) {
-    const toNextLevel = calculateRequiredXP(currentLevel);
-    const incomingXp = xpFloor[difficulty] || 50;
-
-    let totalXp = currentXp + incomingXp;
+// Applique un gain d'XP et fait passer les niveaux nécessaires.
+// L'XP "déborde" d'un niveau à l'autre (checkpoint RPG : on ne perd
+// jamais l'excédent).
+export function addExperience(currentXp, currentLevel, amount) {
+    let totalXp = currentXp + amount;
     let newLevel = currentLevel;
     let hasLeveledUp = false;
 
@@ -30,22 +23,19 @@ export function addExperience(currentXp, currentLevel, difficulty) {
 
     return {
         newXp: totalXp,
-        newLevel: newLevel,
-        hasLeveledUp: hasLeveledUp,
-        xpGained: incomingXp,
+        newLevel,
+        hasLeveledUp,
+        xpGained: amount,
     };
 }
 
-export function removeExperience(currentXp, currentLevel, difficulty) {
-    const xpToRemove = xpFloor[difficulty] || 50;
-    let newXp = currentXp - xpToRemove;
-
-    if (newXp < 0) {
-        newXp = 0;
-    }
+// Retire de l'XP avec plancher à 0 pour le niveau en cours :
+// un niveau acquis ne se perd jamais (règle checkpoint).
+export function removeExperience(currentXp, currentLevel, amount) {
+    const newXp = Math.max(0, currentXp - amount);
 
     return {
-        newXp: newXp,
+        newXp,
         newLevel: currentLevel,
         xpLost: currentXp - newXp,
     };
