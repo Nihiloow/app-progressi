@@ -4,7 +4,7 @@ import {
     removeExperience,
     calculateRequiredXP,
 } from "./progression";
-import { getXpReward, getDailyLimit } from "../config/Gamification.js";
+import { getXpReward, getDailyLimit } from "../config/gamification.js";
 
 describe("Palier de niveau", () => {
     test("Le palier vaut niveau * 100", () => {
