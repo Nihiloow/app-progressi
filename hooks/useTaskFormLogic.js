@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────
-// Destination : hooks/useTaskFormLogic.js (REMPLACE l'existant)
-// ─────────────────────────────────────────────────────────────────────────
-
 import { useState } from "react";
 import { useCreateTask } from "@/hooks/useCreateTask";
 

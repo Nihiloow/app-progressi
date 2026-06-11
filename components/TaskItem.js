@@ -1,5 +1,3 @@
-// Destination : components/TaskItem.js (REMPLACE l'existant)
-
 "use client";
 
 import { useChangeTaskStatus } from "@/hooks/useChangeTaskStatus";

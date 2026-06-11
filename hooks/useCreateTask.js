@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────
-// Destination : hooks/useCreateTask.js (REMPLACE l'existant)
-// ─────────────────────────────────────────────────────────────────────────
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useCreateTask() {

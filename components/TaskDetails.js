@@ -1,5 +1,3 @@
-// Destination : components/TaskDetails.js (REMPLACE l'existant)
-
 "use client";
 
 import { XP_REWARDS } from "@/core/config/gamification";

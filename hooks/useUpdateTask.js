@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────
-// Destination : hooks/useUpdateTask.js (REMPLACE l'existant)
-// ─────────────────────────────────────────────────────────────────────────
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Mise à jour des métadonnées uniquement (titre, priorité, type, échéance).

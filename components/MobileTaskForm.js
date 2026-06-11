@@ -1,5 +1,3 @@
-// Destination : components/MobileTaskForm.js (REMPLACE l'existant)
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
