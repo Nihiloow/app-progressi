@@ -1,13 +1,26 @@
+// Destination : app/api/auth/register/route.js
+
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import { prisma } from "@/lib/prisma";
+import { registerSchema } from "@/core/validation/userSchema";
+import { handleApiError } from "@/lib/handleApiError";
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { email, pseudo, password } = body;
+        const result = registerSchema.safeParse(body);
 
-        // vérifie si le joueur existe déjà
+        if (!result.success) {
+            return NextResponse.json(
+                { error: result.error.issues[0].message },
+                { status: 400 },
+            );
+        }
+
+        // Données validées ET normalisées (email en minuscules, champs trim)
+        const { email, pseudo, password } = result.data;
+
         const existingUser = await prisma.user.findUnique({
             where: { email },
         });
@@ -15,20 +28,14 @@ export async function POST(request) {
         if (existingUser) {
             return NextResponse.json(
                 { error: "Cet email est déjà utilisé par un autre héros." },
-                { status: 400 },
+                { status: 409 },
             );
         }
 
-        // sécurise le mot de passe
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // forge le nouveau compte dans la base de données
-        const newUser = await prisma.user.create({
-            data: {
-                email,
-                pseudo,
-                password: hashedPassword,
-            },
+        await prisma.user.create({
+            data: { email, pseudo, password: hashedPassword },
         });
 
         return NextResponse.json(
@@ -36,10 +43,16 @@ export async function POST(request) {
             { status: 201 },
         );
     } catch (error) {
-        console.error("Erreur Inscription :", error);
-        return NextResponse.json(
-            { error: "Erreur lors de la création du compte." },
-            { status: 500 },
-        );
+        // Filet anti-course : deux inscriptions simultanées avec le même
+        // email passent toutes deux le check ci-dessus, mais la contrainte
+        // @unique en base fait échouer la seconde (code Prisma P2002)
+        if (error.code === "P2002") {
+            return NextResponse.json(
+                { error: "Cet email est déjà utilisé par un autre héros." },
+                { status: 409 },
+            );
+        }
+
+        return handleApiError(error, "Erreur lors de la création du compte.");
     }
 }

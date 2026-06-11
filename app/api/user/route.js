@@ -1,32 +1,38 @@
+// Destination : app/api/user/route.js
+
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { handleApiError } from "@/lib/handleApiError";
 
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session?.user?.email) {
+        if (!session?.user?.id) {
             return NextResponse.json(
-                { error: "Non autorisé" },
+                { error: "Non autorisé." },
                 { status: 401 },
             );
         }
 
+        // Lookup par id (immuable) plutôt que par email : c'est la clé
+        // primaire, et l'id est désormais garanti dans le token
         const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-            select: { pseudo: true, xp: true, level: true },
+            where: { id: session.user.id },
+            select: { pseudo: true, xp: true, level: true, role: true },
         });
 
-        if (!user)
+        if (!user) {
             return NextResponse.json(
-                { error: "Joueur introuvable" },
+                { error: "Joueur introuvable." },
                 { status: 404 },
             );
+        }
 
         return NextResponse.json(user, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+        return handleApiError(error, "Erreur serveur.");
     }
 }

@@ -1,8 +1,11 @@
+// Destination : app/api/tasks/route.js
+
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { createTaskSchema } from "@/core/validation/taskSchema";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { createTaskSchema } from "@/core/validation/taskSchema";
+import { handleApiError } from "@/lib/handleApiError";
 
 export async function GET() {
     try {
@@ -10,23 +13,21 @@ export async function GET() {
 
         if (!session?.user) {
             return NextResponse.json(
-                { error: "Non autorisé" },
+                { error: "Non autorisé." },
                 { status: 401 },
             );
         }
 
-        const userId = session.user.id;
-
         const tasks = await prisma.task.findMany({
-            where: { userId: userId },
+            where: { userId: session.user.id },
             orderBy: { createdAt: "desc" },
         });
 
         return NextResponse.json(tasks, { status: 200 });
     } catch (error) {
-        return NextResponse.json(
-            { error: "Erreur lors de la récupération." },
-            { status: 500 },
+        return handleApiError(
+            error,
+            "Erreur lors de la récupération des quêtes.",
         );
     }
 }
@@ -37,40 +38,32 @@ export async function POST(request) {
 
         if (!session?.user) {
             return NextResponse.json(
-                { error: "Non autorisé" },
+                { error: "Non autorisé." },
                 { status: 401 },
             );
         }
-
-        const userId = session.user.id;
 
         const body = await request.json();
         const result = createTaskSchema.safeParse(body);
 
         if (!result.success) {
             return NextResponse.json(
-                { error: "Données invalides." },
+                { error: result.error.issues[0].message },
                 { status: 400 },
             );
         }
 
+        // Le client ne fournit ni statut, ni XP, ni difficulté : uniquement
+        // les champs du schéma. Tout le reste est dérivé côté serveur.
         const newTask = await prisma.task.create({
             data: {
-                title: result.data.title,
-                difficulty: result.data.difficulty,
-                priority: result.data.priority,
-                taskType: result.data.taskType,
-                dueDate: result.data.dueDate,
-                userId: userId,
+                ...result.data,
+                userId: session.user.id,
             },
         });
 
         return NextResponse.json(newTask, { status: 201 });
     } catch (error) {
-        console.error("Erreur POST Task : ", error);
-        return NextResponse.json(
-            { error: "Erreur lors de la création de la quête." },
-            { status: 500 },
-        );
+        return handleApiError(error, "Erreur lors de la création de la quête.");
     }
 }
