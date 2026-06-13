@@ -1,5 +1,3 @@
-// Destination : app/api/tasks/[id]/route.js
-
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { updateTaskSchema } from "@/core/validation/taskSchema";
 import { TaskNotFoundError } from "@/core/errors/domainErrors";
 import { handleApiError } from "@/lib/handleApiError";
+import { tagService } from "@/core/services/TagService";
 
 // Vérifie que la quête existe ET appartient à l'utilisateur connecté.
 // Jette une erreur métier (traduite en 404 par handleApiError) : impossible
@@ -51,9 +50,24 @@ export async function PATCH(request, { params }) {
 
         await assertTaskOwnership(id, session.user.id);
 
-        const updatedTask = await prisma.task.update({
-            where: { id },
-            data: result.data,
+        const { tags, ...taskData } = result.data;
+
+        const updatedTask = await prisma.$transaction(async (tx) => {
+            await tx.task.update({
+                where: { id },
+                data: taskData,
+            });
+
+            // undefined = champ absent du PATCH = on ne touche pas aux tags.
+            // [] = l'utilisateur a tout retiré = on détache. Les deux diffèrent.
+            if (tags !== undefined) {
+                await tagService.syncTagsForTask(tx, session.user.id, id, tags);
+            }
+
+            return tx.task.findUnique({
+                where: { id },
+                include: { tags: true },
+            });
         });
 
         return NextResponse.json(updatedTask, { status: 200 });
