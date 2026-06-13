@@ -21,9 +21,8 @@ export function useUpdateTask() {
             return response.json();
         },
         onSuccess: () => {
-            // Les métadonnées ne touchent ni l'XP ni le niveau :
-            // inutile d'invalider le profil utilisateur
             queryClient.invalidateQueries({ queryKey: ["tasks"] });
+            queryClient.invalidateQueries({ queryKey: ["tags"] });
         },
     });
 }
