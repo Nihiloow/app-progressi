@@ -38,3 +38,9 @@ export class AccountDisabledError extends DomainError {
         super("Ce compte a été désactivé.", 403);
     }
 }
+
+export class TagNotFoundError extends DomainError {
+    constructor() {
+        super("Tag introuvable.", 404);
+    }
+}
