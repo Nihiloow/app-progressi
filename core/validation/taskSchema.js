@@ -1,8 +1,16 @@
 import { z } from "zod";
 
-// Valeurs alignées sur les enums Prisma (Priority et TaskType)
 const PRIORITIES = ["HIGH", "MEDIUM", "LOW", "NONE"];
 const TASK_TYPES = ["DEEP_WORK", "SHALLOW_WORK", "ADMINISTRATIVE", "NONE"];
+
+// Max 10 tags par tâche : limite arbitraire mais nécessaire (Zero Trust —
+// sans ça, un body avec 10 000 noms de tags passe la validation et tente
+// 10 000 upserts en base).
+const tagsSchema = z
+    .array(z.string().trim().min(1).max(30))
+    .max(10, "10 tags maximum par tâche.")
+    .optional()
+    .default([]);
 
 export const createTaskSchema = z.object({
     title: z
@@ -13,13 +21,9 @@ export const createTaskSchema = z.object({
     priority: z.enum(PRIORITIES).optional().default("NONE"),
     taskType: z.enum(TASK_TYPES).optional().default("NONE"),
     dueDate: z.coerce.date().optional().nullable(),
+    tags: tagsSchema,
 });
 
-// Schéma de la route PATCH : uniquement les champs modifiables librement,
-// tous optionnels. Deux exclusions volontaires :
-// - status : les transitions passent par TaskService (XP, quotas, ledger)
-// - userId / xp / etc. : .strict() rejette toute clé inconnue, ce qui ferme
-//   le mass assignment (impossible d'injecter un champ non prévu)
 export const updateTaskSchema = z
     .object({
         title: z
@@ -30,6 +34,7 @@ export const updateTaskSchema = z
         priority: z.enum(PRIORITIES),
         taskType: z.enum(TASK_TYPES),
         dueDate: z.coerce.date().nullable(),
+        tags: z.array(z.string().trim().min(1).max(30)).max(10),
     })
     .partial()
     .strict();
