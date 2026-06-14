@@ -12,17 +12,17 @@ import {
 
 export const PRIORITY_CONFIG = {
     HIGH: {
-        label: "Surcharge",
+        label: "Importante",
         color: "text-red-500",
         bg: "bg-red-50 dark:bg-red-500/10",
     },
     MEDIUM: {
-        label: "Soutenu",
+        label: "Moyenne",
         color: "text-amber-500",
         bg: "bg-amber-50 dark:bg-amber-500/10",
     },
     LOW: {
-        label: "Calme",
+        label: "Faible",
         color: "text-blue-500",
         bg: "bg-blue-50 dark:bg-blue-500/10",
     },
@@ -35,17 +35,17 @@ export const PRIORITY_CONFIG = {
 
 export const TYPE_CONFIG = {
     DEEP_WORK: {
-        label: "Deep Focus",
+        label: "Concentration",
         icon: FocusIcon,
         color: "text-purple-500",
     },
     SHALLOW_WORK: {
-        label: "Shallow Work",
+        label: "Administrative",
         icon: ListIcon,
         color: "text-indigo-500",
     },
     ADMINISTRATIVE: {
-        label: "Admin",
+        label: "Défaut",
         icon: InboxIcon,
         color: "text-slate-500",
     },
