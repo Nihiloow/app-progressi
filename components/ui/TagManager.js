@@ -9,7 +9,12 @@ import { TAG_COLORS, resolveTagColor } from "@/core/config/tagColors";
 // Gestionnaire de tags : liste verticale, crayon (édition inline) +
 // poubelle (suppression confirmée) par ligne. Pop-up parallèle au TagPanel,
 // ouvert par l'engrenage. Aligné sur le style OptionMenu.
-export function TagManager({ isOpen, onClose, align = "right" }) {
+export function TagManager({
+    isOpen,
+    onClose,
+    align = "right",
+    direction = "down",
+}) {
     const { data: tags = [] } = useTags();
     const [editingId, setEditingId] = useState(null);
     const [confirmingId, setConfirmingId] = useState(null);
@@ -17,10 +22,11 @@ export function TagManager({ isOpen, onClose, align = "right" }) {
     if (!isOpen) return null;
 
     const alignment = align === "right" ? "right-0" : "left-0";
+    const position = direction === "up" ? "bottom-full mb-2" : "top-full mt-2";
 
     return (
         <div
-            className={`absolute top-full mt-2 ${alignment} z-[95] w-58 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
+            className={`absolute ${position} ${alignment} z-[95] w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
         >
             <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 dark:border-zinc-700">
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">

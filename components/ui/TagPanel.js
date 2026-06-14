@@ -10,7 +10,14 @@ import { TagManager } from "@/components/ui/TagManager";
 // Style aligné sur OptionMenu. Le champ crée un tag à la frappe (Entrée),
 // la grille de chips ne sert qu'à appliquer/retirer. L'engrenage ouvre le
 // TagManager (édition/suppression) en pop-up parallèle.
-export function TagPanel({ isOpen, tags, onAdd, onRemove, align = "right" }) {
+export function TagPanel({
+    isOpen,
+    tags,
+    onAdd,
+    onRemove,
+    align = "right",
+    direction = "down",
+}) {
     const [input, setInput] = useState("");
     const [managerOpen, setManagerOpen] = useState(false);
     const { data: existingTags = [] } = useTags();
@@ -30,6 +37,7 @@ export function TagPanel({ isOpen, tags, onAdd, onRemove, align = "right" }) {
         : existingTags;
 
     const alignment = align === "right" ? "right-0" : "left-0";
+    const position = direction === "up" ? "bottom-full mb-2" : "top-full mt-2";
 
     // Entrée : nom déjà existant → on vide (la chip est dans la grille).
     // Sinon → création serveur, sans application.
@@ -51,7 +59,7 @@ export function TagPanel({ isOpen, tags, onAdd, onRemove, align = "right" }) {
 
     return (
         <div
-            className={`absolute top-full mt-2 ${alignment} z-[90] w-64 overflow-visible rounded-xl bg-white p-3 shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
+            className={`absolute ${position} ${alignment} z-[90] w-64 max-w-[calc(100vw-1rem)] overflow-visible rounded-xl bg-white p-3 shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
         >
             <div className="mb-3 flex items-center gap-2">
                 <input
@@ -98,6 +106,7 @@ export function TagPanel({ isOpen, tags, onAdd, onRemove, align = "right" }) {
                         isOpen={managerOpen}
                         onClose={() => setManagerOpen(false)}
                         align="right"
+                        direction={direction}
                     />
                 </div>
             </div>

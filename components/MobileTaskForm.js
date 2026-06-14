@@ -11,6 +11,7 @@ import {
     formatShortDate,
 } from "@/components/ui/taskAppearance";
 import { LightningIcon, CalendarIcon, TagIcon } from "@/components/ui/icons";
+import { TagPanel } from "./ui/TagPanel";
 
 export default function MobileTaskForm({ isOpen, onClose }) {
     const [openMenu, setOpenMenu] = useState(null);
@@ -25,6 +26,9 @@ export default function MobileTaskForm({ isOpen, onClose }) {
         setTaskType,
         dueDate,
         setDueDate,
+        tags,
+        addTag,
+        removeTag,
         isPending,
         handleSubmit,
     } = useTaskFormLogic(() => {
@@ -79,6 +83,28 @@ export default function MobileTaskForm({ isOpen, onClose }) {
 
                     <div className="flex items-center justify-between text-slate-400 dark:text-zinc-500">
                         <div className="flex items-center gap-3">
+                            <div className="relative ml-1 dark:border-zinc-800">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleMenu("tags")}
+                                    aria-label="Étiquettes"
+                                    className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800 ${
+                                        tags.length > 0
+                                            ? "text-indigo-600 dark:text-indigo-400"
+                                            : ""
+                                    }`}
+                                >
+                                    <TagIcon className="h-5 w-5" />
+                                </button>
+                                <TagPanel
+                                    isOpen={openMenu === "tags"}
+                                    tags={tags}
+                                    onAdd={addTag}
+                                    onRemove={removeTag}
+                                    align="left"
+                                    direction="up"
+                                />
+                            </div>
                             {/* Date : input natif invisible (temporaire) */}
                             <div className="relative flex items-center">
                                 <input
@@ -143,16 +169,6 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                     withOverlay
                                 />
                             </div>
-
-                            {/* Étiquettes : prochain chantier */}
-                            <button
-                                type="button"
-                                disabled
-                                aria-label="Étiquettes (bientôt disponible)"
-                                className="ml-1 cursor-not-allowed border-l border-slate-200 pl-3 text-slate-300 dark:border-zinc-800 dark:text-zinc-700"
-                            >
-                                <TagIcon className="h-5 w-5" />
-                            </button>
                         </div>
 
                         <button

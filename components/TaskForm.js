@@ -79,7 +79,7 @@ export default function TaskForm() {
                 <input
                     type="text"
                     placeholder="Que veux-tu accomplir ?"
-                    className="flex-1 bg-transparent p-2 font-medium text-slate-800 placeholder-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder-zinc-500"
+                    className="min-w-0 flex-1 bg-transparent p-2 font-medium text-slate-800 placeholder-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder-zinc-500"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={isPending}
@@ -114,7 +114,7 @@ export default function TaskForm() {
                             }`}
                         >
                             <CalendarIcon className="h-5 w-5" />
-                            <span className="hidden font-semibold lg:block">
+                            <span className="hidden font-semibold xl:block">
                                 {dueDate ? formatShortDate(dueDate) : "Date"}
                             </span>
                         </button>

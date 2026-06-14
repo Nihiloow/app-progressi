@@ -7,6 +7,7 @@ import {
     STATUS_LABELS,
 } from "@/components/ui/taskAppearance";
 import { ListIcon } from "@/components/ui/icons";
+import { resolveTagColor } from "@/core/config/tagColors";
 
 export default function TaskDetails({ task }) {
     // État vide : aucune quête sélectionnée
@@ -68,8 +69,38 @@ export default function TaskDetails({ task }) {
                 </h2>
             </header>
 
-            {/* Zone réservée aux futures features (description, sous-tâches) */}
             <div className="flex-1 overflow-y-auto p-6">
+                {task.tags?.length > 0 && (
+                    <div className="mb-6">
+                        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                            Étiquettes
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                            {task.tags.map((tag) => {
+                                const color = resolveTagColor(tag);
+                                return (
+                                    <span
+                                        key={tag.id}
+                                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1"
+                                        style={{
+                                            backgroundColor: `${color}1a`,
+                                            color,
+                                            "--tw-ring-color": `${color}33`,
+                                        }}
+                                    >
+                                        <span
+                                            className="h-2 w-2 rounded-full"
+                                            style={{ backgroundColor: color }}
+                                        />
+                                        {tag.name}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Zone réservée aux futures features (description, sous-tâches) */}
                 <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-sm text-slate-500 dark:border-zinc-700 dark:bg-zinc-900/50 dark:text-zinc-400">
                     Cette zone accueillera bientôt la description de la quête,
                     les sous-tâches, ou des notes personnelles.
