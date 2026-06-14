@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTags } from "@/hooks/useTags";
 import { useCreateTag } from "@/hooks/useCreateTag";
 import { resolveTagColor } from "@/core/config/tagColors";
@@ -15,6 +15,10 @@ export function TagPanel({ isOpen, tags, onAdd, onRemove, align = "right" }) {
     const [managerOpen, setManagerOpen] = useState(false);
     const { data: existingTags = [] } = useTags();
     const createTag = useCreateTag();
+
+    useEffect(() => {
+        if (!isOpen) setManagerOpen(false);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
