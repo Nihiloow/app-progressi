@@ -4,3 +4,5 @@ export * from "./ListIcon";
 export * from "./InboxIcon";
 export * from "./CalendarIcon";
 export * from "./TagIcon";
+export * from "./DashboardIcon";
+export * from "./UsersIcon";
