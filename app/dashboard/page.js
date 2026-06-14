@@ -103,3 +103,16 @@ export default function DashboardPage() {
         </>
     );
 }
+
+// Redirection isolée dans un composant à part : le push vit dans un
+// useEffect (effet de bord post-rendu), jamais pendant le rendu du
+// dashboard. Évite le "setState while rendering" du Router.
+function RedirectToLogin() {
+    const router = useRouter();
+
+    useEffect(() => {
+        router.push("/login");
+    }, [router]);
+
+    return null;
+}
