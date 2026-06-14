@@ -34,6 +34,14 @@ export const updateTaskSchema = z
         priority: z.enum(PRIORITIES),
         taskType: z.enum(TASK_TYPES),
         dueDate: z.coerce.date().nullable(),
+        description: z
+            .string()
+            .trim()
+            .max(
+                5000,
+                "La description est trop longue (5000 caractères maximum).",
+            )
+            .nullable(),
         tags: z.array(z.string().trim().min(1).max(30)).max(10),
     })
     .partial()
