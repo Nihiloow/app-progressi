@@ -11,6 +11,7 @@ import {
     formatShortDate,
 } from "@/components/ui/taskAppearance";
 import { LightningIcon, CalendarIcon, TagIcon } from "@/components/ui/icons";
+import { TagPanel } from "./ui/TagPanel";
 
 export default function TaskForm() {
     const [openMenu, setOpenMenu] = useState(null);
@@ -25,6 +26,9 @@ export default function TaskForm() {
         setTaskType,
         dueDate,
         setDueDate,
+        tags,
+        addTag,
+        removeTag,
         isPending,
         handleSubmit,
     } = useTaskFormLogic(() => setOpenMenu(null));
@@ -154,15 +158,27 @@ export default function TaskForm() {
                         />
                     </div>
 
-                    {/* Étiquettes : prochain chantier, bouton inactif assumé */}
-                    <button
-                        type="button"
-                        disabled
-                        title="Étiquettes (bientôt disponible)"
-                        className="cursor-not-allowed rounded p-2 text-slate-300 dark:text-zinc-700"
-                    >
-                        <TagIcon className="h-5 w-5" />
-                    </button>
+                    <div className="relative">
+                        <button
+                            type="button"
+                            onClick={() => toggleMenu("tags")}
+                            title="Étiquettes"
+                            className={`rounded p-2 transition-colors hover:bg-slate-200 dark:hover:bg-zinc-800 ${
+                                tags.length > 0
+                                    ? "text-indigo-600 dark:text-indigo-400"
+                                    : "text-slate-500 dark:text-slate-400"
+                            }`}
+                        >
+                            <TagIcon className="h-5 w-5" />
+                        </button>
+                        <TagPanel
+                            isOpen={openMenu === "tags"}
+                            tags={tags}
+                            onAdd={addTag}
+                            onRemove={removeTag}
+                            align="right"
+                        />
+                    </div>
                 </div>
             </form>
         </div>
