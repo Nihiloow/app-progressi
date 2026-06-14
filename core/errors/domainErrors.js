@@ -44,3 +44,23 @@ export class TagNotFoundError extends DomainError {
         super("Tag introuvable.", 404);
     }
 }
+
+export class ForbiddenError extends DomainError {
+    constructor() {
+        // 403 et non 401 : l'identité est connue et valide, c'est le
+        // niveau de privilège qui est insuffisant. Message volontairement
+        // sobre : ne pas détailler ce qui manque comme droit.
+        super("Accès réservé aux administrateurs.", 403);
+    }
+}
+
+export class SelfTargetError extends DomainError {
+    constructor() {
+        // Un admin ne peut pas se désactiver ni se supprimer lui-même :
+        // garde-fou contre le verrouillage hors de sa propre application.
+        super(
+            "Vous ne pouvez pas appliquer cette action à votre propre compte.",
+            409,
+        );
+    }
+}
