@@ -67,7 +67,7 @@ export default function Sidebar() {
                     role provient du même query ["user"] déjà chargé ci-dessus,
                     aucune requête supplémentaire. */}
                 {user.role === "ADMIN" && (
-                    <div className="flex flex-col gap-2 mt-4 border-t border-slate-200 pt-4 dark:border-zinc-800">
+                    <div className="flex flex-col gap-1 mt-4 border-t border-slate-200 pt-4 dark:border-zinc-800">
                         <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
                             Administration
                         </p>

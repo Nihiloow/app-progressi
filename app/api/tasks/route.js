@@ -47,7 +47,6 @@ export async function POST(request) {
 
         const body = await request.json();
         const result = createTaskSchema.safeParse(body);
-        const { tags, ...taskData } = result.data;
 
         if (!result.success) {
             return NextResponse.json(
@@ -55,6 +54,8 @@ export async function POST(request) {
                 { status: 400 },
             );
         }
+
+        const { tags, ...taskData } = result.data;
 
         // Le client ne fournit ni statut, ni XP, ni difficulté : uniquement
         // les champs du schéma. Tout le reste est dérivé côté serveur.
