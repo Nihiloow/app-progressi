@@ -18,4 +18,9 @@ export const DEFAULT_TAG_COLOR = TAG_COLORS[0];
 // couleur de la palette (basée sur son nom), pas une couleur aléatoire
 // qui changerait à chaque rendu.
 export function resolveTagColor(tag) {
-    if (tag.color) return
+    if (tag.color) return tag.color;
+    const index =
+        tag.name.split("").reduce((sum, c) => sum + c.charCodeAt(0), 0) %
+        TAG_COLORS.length;
+    return TAG_COLORS[index];
+}
