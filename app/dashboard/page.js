@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import TaskForm from "@/components/TaskForm";
@@ -49,8 +49,7 @@ export default function DashboardPage() {
     }
 
     if (user?.error || !user) {
-        router.push("/login");
-        return null;
+        return <RedirectToLogin />;
     }
 
     const selectedTask = tasks?.find((t) => t.id === selectedTaskId);
