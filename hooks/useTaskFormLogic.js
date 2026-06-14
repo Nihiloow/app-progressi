@@ -1,25 +1,15 @@
 import { useState } from "react";
 import { useCreateTask } from "@/hooks/useCreateTask";
+import { useTagList } from "@/hooks/useTagList";
 
 export function useTaskFormLogic(onSuccessCallback) {
     const [title, setTitle] = useState("");
     const [priority, setPriority] = useState("NONE");
     const [taskType, setTaskType] = useState("NONE");
     const [dueDate, setDueDate] = useState("");
-    const [tags, setTags] = useState([]);
+    const { tags, setTags, addTag, removeTag } = useTagList();
 
     const createTaskMutation = useCreateTask();
-
-    // Ajout idempotent : pas de doublon, on trim, on ignore le vide.
-    const addTag = (name) => {
-        const clean = name.trim();
-        if (!clean || tags.includes(clean)) return;
-        setTags((prev) => [...prev, clean]);
-    };
-
-    const removeTag = (name) => {
-        setTags((prev) => prev.filter((t) => t !== name));
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
