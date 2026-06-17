@@ -9,14 +9,26 @@ export function OptionMenu({
     onClose,
     onSelect,
     options,
-    direction = "down", // "down" (PC, sous le bouton) ou "up" (mobile, au-dessus)
+    direction = "down", // "down" | "up" | "right"
     align = "left",
     withOverlay = false, // mobile : un voile transparent capte le clic extérieur
 }) {
     if (!isOpen) return null;
 
-    const position = direction === "up" ? "bottom-full mb-2" : "top-full mt-2";
+    // "right" : sous-menu latéral façon TickTick — s'ouvre à droite du panneau
+    // parent, aligné avec le haut du bouton déclencheur.
+    const position =
+        direction === "right"
+            ? "left-full top-0 ml-1"
+            : direction === "up"
+              ? "bottom-full mb-2"
+              : "top-full mt-2";
+
     const alignment = align === "right" ? "right-0" : "left-0";
+    // En mode "right", l'alignement horizontal est géré par left-full,
+    // la prop align n'a plus d'effet.
+    const positionClass =
+        direction === "right" ? position : `${position} ${alignment}`;
 
     return (
         <>
@@ -27,7 +39,7 @@ export function OptionMenu({
                 />
             )}
             <div
-                className={`absolute ${position} ${alignment} z-[90] w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
+                className={`absolute ${positionClass} z-[90] w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
             >
                 <div className="flex flex-col py-1">
                     {options.map((option) => {

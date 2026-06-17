@@ -52,7 +52,7 @@ export default function DashboardPage() {
         return <RedirectToLogin />;
     }
 
-    const selectedTask = tasks?.find((t) => t.id === selectedTaskId);
+    const selectedTask = tasks?.find((t) => t.id === selectedTaskId) ?? null;
 
     return (
         <>
@@ -96,6 +96,7 @@ export default function DashboardPage() {
             </main>
 
             <TaskDetails task={selectedTask} />
+
             <MobileTaskForm
                 isOpen={isMobileFormOpen}
                 onClose={() => setIsMobileFormOpen(false)}
