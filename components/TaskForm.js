@@ -3,14 +3,14 @@
 import { useState, useRef, useEffect } from "react";
 import { useTaskFormLogic } from "@/hooks/useTaskFormLogic";
 import { OptionMenu } from "@/components/ui/OptionMenu";
+import { DatePicker } from "@/components/ui/DatePicker";
 import {
     PRIORITY_OPTIONS,
     TYPE_OPTIONS,
     getPriorityConfig,
     getTypeConfig,
-    formatShortDate,
 } from "@/components/ui/taskAppearance";
-import { LightningIcon, CalendarIcon, TagIcon } from "@/components/ui/icons";
+import { LightningIcon, TagIcon } from "@/components/ui/icons";
 import { TagPanel } from "./ui/TagPanel";
 
 export default function TaskForm() {
@@ -33,8 +33,6 @@ export default function TaskForm() {
         handleSubmit,
     } = useTaskFormLogic(() => setOpenMenu(null));
 
-    // pointerdown (et non mousedown) : couvre souris ET tactile sans
-    // déclencher l'avertissement pointerCapture dans la console
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (
@@ -94,31 +92,11 @@ export default function TaskForm() {
                 </button>
 
                 <div className="flex items-center gap-1 border-l border-slate-200 pl-2 dark:border-zinc-800">
-                    {/* Date : input natif invisible par-dessus le bouton
-                        (solution temporaire avant le calendrier sur-mesure) */}
-                    <div className="relative flex items-center">
-                        <input
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                            aria-label="Date d'échéance"
-                        />
-                        <button
-                            type="button"
-                            tabIndex={-1}
-                            className={`flex items-center gap-1 rounded p-2 text-sm font-medium transition-colors hover:bg-slate-200 dark:hover:bg-zinc-800 ${
-                                dueDate
-                                    ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
-                                    : "text-slate-500 dark:text-slate-400"
-                            }`}
-                        >
-                            <CalendarIcon className="h-5 w-5" />
-                            <span className="hidden font-semibold xl:block">
-                                {dueDate ? formatShortDate(dueDate) : "Date"}
-                            </span>
-                        </button>
-                    </div>
+                    <DatePicker
+                        value={dueDate}
+                        onChange={setDueDate}
+                        align="right"
+                    />
 
                     <div className="relative">
                         <button

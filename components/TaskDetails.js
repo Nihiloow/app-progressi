@@ -125,7 +125,7 @@ function EditableDescription({ task, onSave }) {
                 onChange={(e) => setValue(e.target.value)}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
-                placeholder="Décris ta quête en Markdown…"
+                placeholder="Ajoute une description..."
                 rows={8}
                 className="w-full resize-y rounded-lg border border-indigo-300 bg-slate-50 p-3 text-sm text-slate-700 placeholder-slate-400 focus:border-indigo-500 focus:outline-none dark:border-indigo-500/40 dark:bg-zinc-950 dark:text-slate-200 dark:placeholder-zinc-500"
             />

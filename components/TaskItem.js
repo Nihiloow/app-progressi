@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useChangeTaskStatus } from "@/hooks/useChangeTaskStatus";
 import { useUpdateTask } from "@/hooks/useUpdateTask";
+import { useDeleteTask } from "@/hooks/useDeleteTask";
 import {
     getPriorityConfig,
     getTypeConfig,
@@ -14,6 +15,20 @@ import { resolveTagColor } from "@/core/config/tagColors";
 import { LightningIcon, CalendarIcon, TagIcon } from "@/components/ui/icons";
 import { OptionMenu } from "@/components/ui/OptionMenu";
 import { TagPanel } from "@/components/ui/TagPanel";
+import { DatePicker } from "@/components/ui/DatePicker";
+
+// Classe de couleur de la date selon son rapport au jour courant.
+// Dépassée → rouge, aujourd'hui → indigo, future → ardoise.
+const dueDateColor = (dueDate) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    if (due < today) return "text-red-500 dark:text-red-400";
+    if (due.getTime() === today.getTime())
+        return "text-indigo-500 dark:text-indigo-400";
+    return "text-slate-400 dark:text-zinc-500";
+};
 
 // Durée du longpress mobile avant ouverture du menu contextuel (ms)
 const LONGPRESS_DELAY = 500;
@@ -26,6 +41,7 @@ function ContextMenu({
     onClose,
     onUpdateTask,
     onToggleStatus,
+    onDeleteTask,
 }) {
     const menuRef = useRef(null);
     const [subMenu, setSubMenu] = useState(null); // "priority" | "type" | "tags" | null
@@ -112,7 +128,7 @@ function ContextMenu({
                     <LightningIcon
                         className={`h-4 w-4 ${getPriorityConfig(task.priority).color}`}
                     />
-                    Priorité — {getPriorityConfig(task.priority).label}
+                    Priorité
                     <svg
                         className="ml-auto h-3.5 w-3.5 text-slate-400"
                         fill="none"
@@ -155,7 +171,7 @@ function ContextMenu({
                         const Icon = cfg.icon;
                         return <Icon className={`h-4 w-4 ${cfg.color}`} />;
                     })()}
-                    Type — {getTypeConfig(task.taskType).label}
+                    Type
                     <svg
                         className="ml-auto h-3.5 w-3.5 text-slate-400"
                         fill="none"
@@ -193,11 +209,6 @@ function ContextMenu({
                 >
                     <TagIcon className="h-4 w-4 text-slate-500" />
                     Étiquettes
-                    {task.tags?.length > 0 && (
-                        <span className="ml-1 text-xs text-indigo-500">
-                            ({task.tags.length})
-                        </span>
-                    )}
                     <svg
                         className="ml-auto h-3.5 w-3.5 text-slate-400"
                         fill="none"
@@ -228,7 +239,29 @@ function ContextMenu({
                             ).filter((n) => n !== name);
                             onUpdateTask({ tags: updated });
                         }}
+                        direction="right"
+                    />
+                </div>
+            </div>
+
+            {/* Date — DatePicker inline dans le menu contextuel */}
+            <div className="flex items-center gap-3 px-4 py-2.5">
+                <CalendarIcon className="h-4 w-4 flex-shrink-0 text-slate-500" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">
+                    Date
+                </span>
+                <div className="ml-auto">
+                    <DatePicker
+                        value={task.dueDate ? task.dueDate.split("T")[0] : ""}
+                        onChange={(val) =>
+                            onUpdateTask({
+                                dueDate: val
+                                    ? new Date(val).toISOString()
+                                    : null,
+                            })
+                        }
                         align="right"
+                        direction="up"
                     />
                 </div>
             </div>
@@ -263,6 +296,33 @@ function ContextMenu({
                 >
                     {isAbandoned ? "Réactiver la quête" : "Ne fera pas"}
                 </span>
+            </button>
+
+            <div className="my-1 border-t border-slate-100 dark:border-zinc-800" />
+
+            {/* Supprimer — destructif, rouge pour signal visuel clair */}
+            <button
+                type="button"
+                onClick={() => {
+                    onDeleteTask();
+                    onClose();
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+            >
+                <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                </svg>
+                Supprimer la quête
             </button>
         </div>
     );
@@ -343,6 +403,7 @@ function EditableTitleInline({ task, onSave }) {
 export default function TaskItem({ task, isSelected, onSelect }) {
     const changeStatusMutation = useChangeTaskStatus();
     const updateTaskMutation = useUpdateTask();
+    const deleteTaskMutation = useDeleteTask();
     const isPending = changeStatusMutation.isPending;
 
     const [contextMenu, setContextMenu] = useState(null); // { x, y } | null
@@ -409,7 +470,7 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                     isSelected
                         ? "border-indigo-500 bg-indigo-50/50 shadow-sm dark:border-indigo-500/50 dark:bg-indigo-500/10"
                         : "border-slate-200 bg-white shadow-sm hover:border-slate-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
-                } ${isInactive ? "bg-slate-50 opacity-60 dark:bg-zinc-950" : ""}`}
+                } ${isInactive ? "opacity-60" : ""}`}
             >
                 <button
                     onClick={handleToggleStatus}
@@ -417,12 +478,12 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                     aria-label={
                         isDone ? "Annuler la validation" : "Valider la quête"
                     }
-                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border transition-all ${
+                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all ${
                         isDone
                             ? "border-indigo-500 bg-indigo-500 text-white dark:border-indigo-600 dark:bg-indigo-600"
                             : isAbandoned
                               ? "border-slate-400 text-slate-400 dark:border-zinc-500 dark:text-zinc-500"
-                              : "border-slate-300 hover:border-indigo-400 dark:border-zinc-600 dark:hover:border-indigo-500"
+                              : priorityConfig.ring
                     } ${isPending ? "cursor-wait opacity-50" : ""}`}
                 >
                     {isDone && (
@@ -461,13 +522,6 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                     <EditableTitleInline task={task} onSave={handleUpdate} />
 
                     <div className="mt-1 flex items-center gap-2">
-                        {task.priority !== "NONE" && (
-                            <span
-                                className={`text-[10px] font-bold uppercase ${priorityConfig.color}`}
-                            >
-                                {priorityConfig.label}
-                            </span>
-                        )}
                         {task.taskType !== "NONE" && (
                             <TypeIcon
                                 className={`h-3.5 w-3.5 ${getTypeConfig(task.taskType).color}`}
@@ -498,6 +552,14 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                                 Ne sera pas faite
                             </span>
                         )}
+                        {task.dueDate && (
+                            <span
+                                className={`ml-auto flex items-center gap-1 text-[10px] font-medium ${dueDateColor(task.dueDate)}`}
+                            >
+                                <CalendarIcon className="h-3 w-3" />
+                                {formatShortDate(task.dueDate)}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
@@ -509,6 +571,7 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                     onClose={closeContextMenu}
                     onUpdateTask={handleUpdate}
                     onToggleStatus={handleStatusFromMenu}
+                    onDeleteTask={() => deleteTaskMutation.mutate(task.id)}
                 />
             )}
         </>

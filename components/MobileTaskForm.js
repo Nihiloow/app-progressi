@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useTaskFormLogic } from "@/hooks/useTaskFormLogic";
 import { OptionMenu } from "@/components/ui/OptionMenu";
+import { DatePicker } from "@/components/ui/DatePicker";
 import {
     PRIORITY_OPTIONS,
     TYPE_OPTIONS,
     getPriorityConfig,
     getTypeConfig,
-    formatShortDate,
 } from "@/components/ui/taskAppearance";
-import { LightningIcon, CalendarIcon, TagIcon } from "@/components/ui/icons";
+import { LightningIcon, TagIcon } from "@/components/ui/icons";
 import { TagPanel } from "./ui/TagPanel";
 
 export default function MobileTaskForm({ isOpen, onClose }) {
@@ -105,30 +105,13 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                     direction="up"
                                 />
                             </div>
-                            {/* Date : input natif invisible (temporaire) */}
-                            <div className="relative flex items-center">
-                                <input
-                                    type="date"
-                                    value={dueDate}
-                                    onChange={(e) => setDueDate(e.target.value)}
-                                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                                    aria-label="Date d'échéance"
-                                />
-                                <button
-                                    type="button"
-                                    tabIndex={-1}
-                                    className={`flex items-center gap-1 rounded px-2 py-1 text-sm font-medium transition-colors ${
-                                        dueDate
-                                            ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
-                                            : "text-indigo-500 dark:text-indigo-400"
-                                    }`}
-                                >
-                                    <CalendarIcon className="h-5 w-5" />
-                                    {dueDate
-                                        ? formatShortDate(dueDate)
-                                        : "Date"}
-                                </button>
-                            </div>
+
+                            <DatePicker
+                                value={dueDate}
+                                onChange={setDueDate}
+                                align="left"
+                                direction="up"
+                            />
 
                             <div className="relative">
                                 <button

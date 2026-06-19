@@ -36,8 +36,17 @@ export function TagPanel({
           )
         : existingTags;
 
-    const alignment = align === "right" ? "right-0" : "left-0";
-    const position = direction === "up" ? "bottom-full mb-2" : "top-full mt-2";
+    // "right" : s'ouvre à droite du panneau parent, aligné en haut —
+    // même logique que OptionMenu en direction="right".
+    const position =
+        direction === "right"
+            ? "left-full top-0 ml-1"
+            : direction === "up"
+              ? "bottom-full mb-2"
+              : "top-full mt-2";
+
+    const alignment =
+        direction === "right" ? "" : align === "right" ? "right-0" : "left-0";
 
     // Entrée : nom déjà existant → on vide (la chip est dans la grille).
     // Sinon → création serveur, sans application.

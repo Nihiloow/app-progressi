@@ -12,40 +12,44 @@ import {
 
 export const PRIORITY_CONFIG = {
     HIGH: {
-        label: "Importante",
+        label: "Surcharge",
         color: "text-red-500",
         bg: "bg-red-50 dark:bg-red-500/10",
+        ring: "border-red-400 dark:border-red-500",
     },
     MEDIUM: {
-        label: "Moyenne",
+        label: "Soutenu",
         color: "text-amber-500",
         bg: "bg-amber-50 dark:bg-amber-500/10",
+        ring: "border-amber-400 dark:border-amber-500",
     },
     LOW: {
-        label: "Faible",
+        label: "Calme",
         color: "text-blue-500",
         bg: "bg-blue-50 dark:bg-blue-500/10",
+        ring: "border-blue-400 dark:border-blue-500",
     },
     NONE: {
         label: "Énergie",
         color: "text-slate-400 dark:text-zinc-400",
         bg: "bg-transparent",
+        ring: "border-slate-300 dark:border-zinc-600",
     },
 };
 
 export const TYPE_CONFIG = {
     DEEP_WORK: {
-        label: "Concentration",
+        label: "Deep Focus",
         icon: FocusIcon,
         color: "text-purple-500",
     },
     SHALLOW_WORK: {
-        label: "Administrative",
+        label: "Shallow Work",
         icon: ListIcon,
         color: "text-indigo-500",
     },
     ADMINISTRATIVE: {
-        label: "Défaut",
+        label: "Admin",
         icon: InboxIcon,
         color: "text-slate-500",
     },
@@ -94,7 +98,8 @@ export const STATUS_LABELS = {
 
 // Format court "11 juin" affiché sur les boutons de date des deux formulaires
 export function formatShortDate(dateString) {
-    return new Date(dateString).toLocaleDateString("fr-FR", {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("fr-FR", {
         day: "numeric",
         month: "short",
     });
