@@ -1,20 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { toDateInputValue } from "@/lib/date";
 import {
     CalendarIcon,
     CloseIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
 } from "@/components/ui/icons";
-
-// Renvoie "YYYY-MM-DD" en heure locale à partir d'une Date JS.
-const toValue = (d) => {
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-};
 
 // Noms courts des jours (lundi en premier, norme française)
 const DAY_LABELS = ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"];
@@ -63,7 +56,7 @@ export function DatePicker({
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const today = new Date();
-    const todayValue = toValue(today);
+    const todayValue = toDateInputValue(today);
 
     // Mois affiché dans le calendrier (indépendant de la sélection)
     const [viewYear, setViewYear] = useState(
@@ -113,7 +106,7 @@ export function DatePicker({
     };
 
     const handleSelect = (day) => {
-        const selected = toValue(new Date(viewYear, viewMonth, day));
+        const selected = toDateInputValue(new Date(viewYear, viewMonth, day));
         onChange(selected);
         setIsOpen(false);
     };
@@ -214,7 +207,7 @@ export function DatePicker({
                         <div className="grid grid-cols-7 gap-y-1 text-center">
                             {grid.map((day, i) => {
                                 if (!day) return <span key={`empty-${i}`} />;
-                                const cellValue = toValue(
+                                const cellValue = toDateInputValue(
                                     new Date(viewYear, viewMonth, day),
                                 );
                                 const isSelected = cellValue === value;
@@ -258,7 +251,7 @@ export function DatePicker({
                             onClick={() => {
                                 const tomorrow = new Date(today);
                                 tomorrow.setDate(today.getDate() + 1);
-                                onChange(toValue(tomorrow));
+                                onChange(toDateInputValue(tomorrow));
                                 setIsOpen(false);
                             }}
                             className="flex-1 rounded-md py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
