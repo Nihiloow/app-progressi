@@ -1,21 +1,13 @@
 "use client";
 
 import AvatarProgress from "@/components/AvatarProgress";
-import { useQuery } from "@tanstack/react-query";
+import { useUser } from "@/hooks/useUser";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DashboardIcon, UsersIcon } from "@/components/ui/icons";
 
 export default function Sidebar() {
-    const { data: user, isLoading } = useQuery({
-        queryKey: ["user"],
-        queryFn: async () => {
-            const res = await fetch("/api/user");
-            if (!res.ok) throw new Error("Erreur réseau");
-            return res.json();
-        },
-    });
-
+    const { data: user, isLoading } = useUser();
     const pathname = usePathname();
 
     // Style partagé des liens de nav : fond bleu si la route courante
@@ -64,7 +56,7 @@ export default function Sidebar() {
                     ...
                 </button>
                 {/* Rubrique admin : visible uniquement pour les comptes ADMIN.
-                    role provient du même query ["user"] déjà chargé ci-dessus,
+                    role provient du même hook useUser déjà chargé ci-dessus,
                     aucune requête supplémentaire. */}
                 {user.role === "ADMIN" && (
                     <div className="flex flex-col gap-1 mt-4 border-t border-slate-200 pt-4 dark:border-zinc-800">

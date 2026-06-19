@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useUser } from "@/hooks/useUser";
 import {
     ListIcon,
     CalendarIcon,
@@ -15,15 +15,7 @@ import {
 // L'entrée admin n'apparaît que pour les comptes ADMIN.
 export default function BottomNav() {
     const pathname = usePathname();
-
-    const { data: user } = useQuery({
-        queryKey: ["user"],
-        queryFn: async () => {
-            const res = await fetch("/api/user");
-            if (!res.ok) throw new Error("Erreur réseau");
-            return res.json();
-        },
-    });
+    const { data: user } = useUser();
 
     const itemClass = (href) =>
         pathname === href

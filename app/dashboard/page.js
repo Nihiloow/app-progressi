@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/useUser";
 import TaskForm from "@/components/TaskForm";
 import TaskDetails from "@/components/TaskDetails";
 import MobileTaskForm from "@/components/MobileTaskForm";
@@ -14,14 +15,7 @@ export default function DashboardPage() {
     const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
     const router = useRouter();
 
-    const { data: user, isLoading: isUserLoading } = useQuery({
-        queryKey: ["user"],
-        queryFn: async () => {
-            const res = await fetch("/api/user");
-            if (!res.ok) throw new Error("Erreur réseau");
-            return res.json();
-        },
-    });
+    const { data: user, isLoading: isUserLoading } = useUser();
 
     const { data: tasks, isLoading: isTasksLoading } = useQuery({
         queryKey: ["tasks"],
