@@ -91,8 +91,11 @@ model Task {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Le quota journalier filtre toujours par (userId, status, completedAt)
-  @@index([userId, status, completedAt])
+  // La liste des tâches filtre par userId et trie par createdAt desc :
+  // cet index sert le filtre ET le tri (scan d'index pré-trié, pas de sort).
+  // (Le quota journalier compte désormais des XpEvent, plus des Task :
+  // l'ancien index [userId, status, completedAt] ne servait plus aucune requête.)
+  @@index([userId, createdAt])
 }
 
 model Tag {
@@ -107,6 +110,10 @@ model Tag {
 
   // Un utilisateur ne peut pas créer deux fois le même nom de tag
   @@unique([name, userId])
+
+  // L'unique ci-dessus a `name` en tête : il ne sert pas un filtre par
+  // userId seul (liste des tags). D'où cet index dédié sur la clé étrangère.
+  @@index([userId])
 }
 
 // Livre de comptes de l'XP : source de vérité unique, append-only.
@@ -139,4 +146,9 @@ model XpEvent {
 
   // Les graphiques agrègent toujours par (userId, createdAt)
   @@index([userId, createdAt])
+
+  // La réouverture d'une tâche (remboursement) cherche le GAIN actif par
+  // taskId : sans index, scan séquentiel. La clé étrangère n'est pas
+  // indexée d'office par Postgres/Prisma.
+  @@index([taskId])
 }
