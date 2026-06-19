@@ -7,6 +7,7 @@ import TaskForm from "@/components/TaskForm";
 import TaskDetails from "@/components/TaskDetails";
 import MobileTaskForm from "@/components/MobileTaskForm";
 import TaskList from "@/components/TaskList";
+import { PlusIcon } from "@/components/ui/icons";
 
 export default function DashboardPage() {
     const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -79,19 +80,7 @@ export default function DashboardPage() {
                     className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500 text-white shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 md:hidden"
                     aria-label="Nouvelle quête"
                 >
-                    <svg
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 4v16m8-8H4"
-                        />
-                    </svg>
+                    <PlusIcon className="h-6 w-6" />
                 </button>
             </main>
 

@@ -10,7 +10,12 @@ import {
     getPriorityConfig,
     getTypeConfig,
 } from "@/components/ui/taskAppearance";
-import { LightningIcon, TagIcon } from "@/components/ui/icons";
+import {
+    LightningIcon,
+    TagIcon,
+    CheckIcon,
+    SpinnerIcon,
+} from "@/components/ui/icons";
 import { TagPanel } from "./ui/TagPanel";
 
 export default function MobileTaskForm({ isOpen, onClose }) {
@@ -165,21 +170,9 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                             }`}
                         >
                             {isPending ? (
-                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                                <SpinnerIcon className="h-4 w-4 text-white" />
                             ) : (
-                                <svg
-                                    className="h-5 w-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth="3"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M5 13l4 4L19 7"
-                                    />
-                                </svg>
+                                <CheckIcon className="h-5 w-5" />
                             )}
                         </button>
                     </div>

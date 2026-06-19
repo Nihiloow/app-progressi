@@ -12,7 +12,16 @@ import {
     formatShortDate,
 } from "@/components/ui/taskAppearance";
 import { resolveTagColor } from "@/core/config/tagColors";
-import { LightningIcon, CalendarIcon, TagIcon } from "@/components/ui/icons";
+import {
+    LightningIcon,
+    CalendarIcon,
+    TagIcon,
+    ChevronRightIcon,
+    BanIcon,
+    CheckIcon,
+    CloseIcon,
+    TrashIcon,
+} from "@/components/ui/icons";
 import { OptionMenu } from "@/components/ui/OptionMenu";
 import { TagPanel } from "@/components/ui/TagPanel";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -83,7 +92,6 @@ function ContextMenu({
         zIndex: 200,
     };
 
-    const isDone = task.status === "DONE";
     const isAbandoned = task.status === "WONT_DO";
 
     const handlePriority = (value) => {
@@ -129,19 +137,7 @@ function ContextMenu({
                         className={`h-4 w-4 ${getPriorityConfig(task.priority).color}`}
                     />
                     Priorité
-                    <svg
-                        className="ml-auto h-3.5 w-3.5 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9 5l7 7-7 7"
-                        />
-                    </svg>
+                    <ChevronRightIcon className="ml-auto h-3.5 w-3.5 text-slate-400" />
                 </button>
                 {/* onMouseEnter sur l'OptionMenu annule le timer de fermeture :
                     la souris peut glisser du bouton au panneau sans interruption. */}
@@ -172,19 +168,7 @@ function ContextMenu({
                         return <Icon className={`h-4 w-4 ${cfg.color}`} />;
                     })()}
                     Type
-                    <svg
-                        className="ml-auto h-3.5 w-3.5 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9 5l7 7-7 7"
-                        />
-                    </svg>
+                    <ChevronRightIcon className="ml-auto h-3.5 w-3.5 text-slate-400" />
                 </button>
                 <div onMouseEnter={cancelClose} onMouseLeave={scheduleClose}>
                     <OptionMenu
@@ -209,19 +193,7 @@ function ContextMenu({
                 >
                     <TagIcon className="h-4 w-4 text-slate-500" />
                     Étiquettes
-                    <svg
-                        className="ml-auto h-3.5 w-3.5 text-slate-400"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M9 5l7 7-7 7"
-                        />
-                    </svg>
+                    <ChevronRightIcon className="ml-auto h-3.5 w-3.5 text-slate-400" />
                 </button>
                 <div onMouseEnter={cancelClose} onMouseLeave={scheduleClose}>
                     <TagPanel
@@ -274,19 +246,7 @@ function ContextMenu({
                 onClick={handleWontDo}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-zinc-800"
             >
-                <svg
-                    className="h-4 w-4 text-slate-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728L5.636 5.636"
-                    />
-                </svg>
+                <BanIcon className="h-4 w-4 text-slate-500" />
                 <span
                     className={
                         isAbandoned
@@ -309,19 +269,7 @@ function ContextMenu({
                 }}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
             >
-                <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                </svg>
+                <TrashIcon className="h-4 w-4" />
                 Supprimer la quête
             </button>
         </div>
@@ -486,36 +434,8 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                               : priorityConfig.ring
                     } ${isPending ? "cursor-wait opacity-50" : ""}`}
                 >
-                    {isDone && (
-                        <svg
-                            className="h-3.5 w-3.5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M5 13l4 4L19 7"
-                            />
-                        </svg>
-                    )}
-                    {isAbandoned && (
-                        <svg
-                            className="h-3 w-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
-                    )}
+                    {isDone && <CheckIcon className="h-3.5 w-3.5" />}
+                    {isAbandoned && <CloseIcon className="h-3 w-3" />}
                 </button>
 
                 <div className="flex flex-1 flex-col overflow-hidden">

@@ -10,7 +10,7 @@ import {
     getPriorityConfig,
     getTypeConfig,
 } from "@/components/ui/taskAppearance";
-import { LightningIcon, TagIcon } from "@/components/ui/icons";
+import { LightningIcon, TagIcon, PlusIcon } from "@/components/ui/icons";
 import { TagPanel } from "./ui/TagPanel";
 
 export default function TaskForm() {
@@ -59,19 +59,7 @@ export default function TaskForm() {
                 className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 pr-3 shadow-sm transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 dark:border-zinc-800 dark:bg-zinc-900/50 dark:focus-within:bg-zinc-950"
             >
                 <div className="pl-3 text-slate-400">
-                    <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 4v16m8-8H4"
-                        />
-                    </svg>
+                    <PlusIcon className="h-5 w-5" />
                 </div>
 
                 <input

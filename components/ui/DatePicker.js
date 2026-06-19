@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import {
+    CalendarIcon,
+    CloseIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+} from "@/components/ui/icons";
 
 // Renvoie "YYYY-MM-DD" en heure locale à partir d'une Date JS.
 const toValue = (d) => {
@@ -149,19 +155,7 @@ export function DatePicker({
                 onClick={() => setIsOpen((v) => !v)}
                 className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-zinc-800 ${buttonColor}`}
             >
-                <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                </svg>
+                <CalendarIcon className="h-4 w-4" />
                 {label}
                 {value && (
                     <span
@@ -170,19 +164,7 @@ export function DatePicker({
                         aria-label="Effacer la date"
                         className="ml-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                     >
-                        <svg
-                            className="h-3 w-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
+                        <CloseIcon className="h-3 w-3" />
                     </span>
                 )}
             </button>
@@ -199,19 +181,7 @@ export function DatePicker({
                             aria-label="Mois précédent"
                             className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                         >
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M15 19l-7-7 7-7"
-                                />
-                            </svg>
+                            <ChevronLeftIcon className="h-4 w-4" />
                         </button>
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
                             {MONTH_NAMES[viewMonth]} {viewYear}
@@ -222,19 +192,7 @@ export function DatePicker({
                             aria-label="Mois suivant"
                             className="rounded-md p-1 text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                         >
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M9 5l7 7-7 7"
-                                />
-                            </svg>
+                            <ChevronRightIcon className="h-4 w-4" />
                         </button>
                     </div>
 
