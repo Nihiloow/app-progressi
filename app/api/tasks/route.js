@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { createTaskSchema } from "@/core/validation/taskSchema";
 import { handleApiError } from "@/lib/handleApiError";
-import { tagService } from "@/core/services/TagService";
+import { taskService } from "@/core/services/TaskService";
 
 export async function GET() {
     try {
@@ -55,33 +55,10 @@ export async function POST(request) {
             );
         }
 
-        const { tags, ...taskData } = result.data;
-
-        // Le client ne fournit ni statut, ni XP, ni difficulté : uniquement
-        // les champs du schéma. Tout le reste est dérivé côté serveur.
-        const newTask = await prisma.$transaction(async (tx) => {
-            const task = await tx.task.create({
-                data: {
-                    ...taskData,
-                    userId: session.user.id,
-                },
-            });
-
-            // tags a un .default([]) dans createTaskSchema : toujours un tableau.
-            // syncTagsForTask gère le cas [] (aucune liaison créée).
-            await tagService.syncTagsForTask(
-                tx,
-                session.user.id,
-                task.id,
-                tags,
-            );
-
-            // Recharge avec les tags pour que le front les ait dans la réponse 201
-            return tx.task.findUnique({
-                where: { id: task.id },
-                include: { tags: true },
-            });
-        });
+        const newTask = await taskService.createTask(
+            session.user.id,
+            result.data,
+        );
 
         return NextResponse.json(newTask, { status: 201 });
     } catch (error) {

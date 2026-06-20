@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { tagService } from "@/core/services/TagService";
 import { addExperience, removeExperience } from "../engine/progression";
 import { getXpReward, getDailyLimit } from "../config/gamification";
 import {
@@ -7,24 +8,82 @@ import {
 } from "../errors/domainErrors";
 
 // Orchestrateur métier des quêtes : seule porte d'entrée autorisée pour les
-// transitions de statut (l'XP et les quotas en dépendent). Les routes ne
-// touchent JAMAIS au statut directement.
+// transitions de statut (l'XP et les quotas en dépendent), ET pour la
+// création/mise à jour des métadonnées (titre, priorité, type, tags) — ces
+// deux dernières orchestrent une transaction Prisma + synchronisation des
+// tags, auparavant dupliquée dans les routes POST et PATCH.
 //
 // Machine à états : TODO → DONE (complétion, XP), DONE → TODO (réouverture,
 // remboursement), TODO → WONT_DO (abandon, neutre), WONT_DO → TODO (neutre).
 // Toute autre transition est rejetée.
 //
-// La classe reçoit son client de base de données par le constructeur
-// (injection de dépendance) : on peut lui passer un mock dans les tests.
+// La classe reçoit son client de base de données ET son TagService par le
+// constructeur (injection de dépendance) : testable avec des mocks pour les
+// deux, sans dépendre d'un import figé en dur.
 export class TaskService {
     #db;
+    #tagService;
 
-    constructor(db) {
+    constructor(db, tagSvc) {
         this.#db = db;
+        this.#tagService = tagSvc;
     }
 
-    // Point d'entrée unique pour la route PATCH : dispatch vers la bonne
-    // transition selon le statut visé.
+    // Crée une tâche pour l'utilisateur et synchronise ses tags en une seule
+    // transaction. tagNames est toujours un tableau (default([]) du schéma) :
+    // syncTagsForTask gère le cas [] sans créer de liaison.
+    async createTask(userId, { tags: tagNames, ...taskData }) {
+        return this.#db.$transaction(async (tx) => {
+            const task = await tx.task.create({
+                data: { ...taskData, userId },
+            });
+
+            await this.#tagService.syncTagsForTask(
+                tx,
+                userId,
+                task.id,
+                tagNames,
+            );
+
+            // Recharge avec les tags pour que l'appelant les ait dans la
+            // réponse (cohérent avec la forme renvoyée par updateTask).
+            return tx.task.findUnique({
+                where: { id: task.id },
+                include: { tags: true },
+            });
+        });
+    }
+
+    // Met à jour les métadonnées d'une tâche (jamais le statut : passe par
+    // changeStatus). tags undefined = champ absent du PATCH = on ne touche
+    // pas aux tags ; tags [] = l'utilisateur a tout retiré = on détache.
+    async updateTask(taskId, userId, { tags: tagNames, ...taskData }) {
+        await this.#getOwnedTask(this.#db, taskId, userId);
+
+        return this.#db.$transaction(async (tx) => {
+            await tx.task.update({
+                where: { id: taskId },
+                data: taskData,
+            });
+
+            if (tagNames !== undefined) {
+                await this.#tagService.syncTagsForTask(
+                    tx,
+                    userId,
+                    taskId,
+                    tagNames,
+                );
+            }
+
+            return tx.task.findUnique({
+                where: { id: taskId },
+                include: { tags: true },
+            });
+        });
+    }
+
+    // Point d'entrée unique pour la route PATCH /status : dispatch vers la
+    // bonne transition selon le statut visé.
     async changeStatus(taskId, userId, targetStatus) {
         switch (targetStatus) {
             case "DONE":
@@ -190,7 +249,10 @@ export class TaskService {
     // ─── Méthodes privées (encapsulation) ────────────────────────────────
 
     // Charge une tâche en vérifiant la propriété : toute méthode du service
-    // passe par ici, l'ownership ne peut pas être oublié.
+    // passe par ici, l'ownership ne peut pas être oublié. 404 volontairement
+    // identique que la tâche n'existe pas OU appartienne à un autre
+    // utilisateur (TaskNotFoundError) : ne pas révéler l'existence des
+    // ressources d'autrui.
     async #getOwnedTask(db, taskId, userId) {
         const task = await db.task.findUnique({ where: { id: taskId } });
 
@@ -221,5 +283,6 @@ export class TaskService {
     }
 }
 
-// Instance unique branchée sur le vrai client Prisma, importée par les routes
-export const taskService = new TaskService(prisma);
+// Instance unique branchée sur le vrai client Prisma et le vrai TagService,
+// importée par les routes.
+export const taskService = new TaskService(prisma, tagService);

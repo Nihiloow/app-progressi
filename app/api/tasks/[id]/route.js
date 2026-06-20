@@ -5,11 +5,13 @@ import { authOptions } from "@/lib/auth";
 import { updateTaskSchema } from "@/core/validation/taskSchema";
 import { TaskNotFoundError } from "@/core/errors/domainErrors";
 import { handleApiError } from "@/lib/handleApiError";
-import { tagService } from "@/core/services/TagService";
+import { taskService } from "@/core/services/TaskService";
 
 // Vérifie que la quête existe ET appartient à l'utilisateur connecté.
 // Jette une erreur métier (traduite en 404 par handleApiError) : impossible
-// de lire ou modifier la ressource d'un autre joueur.
+// de lire ou modifier la ressource d'un autre joueur. Reste utilisé ici
+// pour DELETE uniquement — PATCH délègue son ownership check à
+// taskService.updateTask, qui porte désormais la même règle.
 async function assertTaskOwnership(taskId, userId) {
     const task = await prisma.task.findUnique({ where: { id: taskId } });
 
@@ -20,7 +22,7 @@ async function assertTaskOwnership(taskId, userId) {
     return task;
 }
 
-// PATCH : métadonnées uniquement (titre, priorité, type, échéance).
+// PATCH : métadonnées uniquement (titre, priorité, type, échéance, tags).
 // Le statut est exclu du schéma : les transitions TODO/DONE/WONT_DO passent
 // par la route /status qui délègue au TaskService (XP, quotas, ledger).
 export async function PATCH(request, { params }) {
@@ -48,27 +50,11 @@ export async function PATCH(request, { params }) {
             );
         }
 
-        await assertTaskOwnership(id, session.user.id);
-
-        const { tags, ...taskData } = result.data;
-
-        const updatedTask = await prisma.$transaction(async (tx) => {
-            await tx.task.update({
-                where: { id },
-                data: taskData,
-            });
-
-            // undefined = champ absent du PATCH = on ne touche pas aux tags.
-            // [] = l'utilisateur a tout retiré = on détache. Les deux diffèrent.
-            if (tags !== undefined) {
-                await tagService.syncTagsForTask(tx, session.user.id, id, tags);
-            }
-
-            return tx.task.findUnique({
-                where: { id },
-                include: { tags: true },
-            });
-        });
+        const updatedTask = await taskService.updateTask(
+            id,
+            session.user.id,
+            result.data,
+        );
 
         return NextResponse.json(updatedTask, { status: 200 });
     } catch (error) {
