@@ -8,14 +8,18 @@ const hexColorSchema = z
     .optional()
     .nullable();
 
-export const createTagSchema = z.object({
-    name: z
-        .string()
-        .trim()
-        .min(1, "Le nom du tag ne peut pas être vide.")
-        .max(30, "Le nom du tag est trop long (30 caractères maximum)."),
-    color: hexColorSchema,
-});
+// .strict() : même rationale que createTaskSchema — un champ hors schéma
+// (userId, id…) doit faire échouer la requête, pas être ignoré en silence.
+export const createTagSchema = z
+    .object({
+        name: z
+            .string()
+            .trim()
+            .min(1, "Le nom du tag ne peut pas être vide.")
+            .max(30, "Le nom du tag est trop long (30 caractères maximum)."),
+        color: hexColorSchema,
+    })
+    .strict();
 
 export const updateTagSchema = z
     .object({
