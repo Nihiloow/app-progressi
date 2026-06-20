@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTags } from "@/hooks/useTags";
 import { useUpdateTag } from "@/hooks/useUpdateTag";
 import { useDeleteTag } from "@/hooks/useDeleteTag";
@@ -20,6 +20,21 @@ export function TagManager({
     const [editingId, setEditingId] = useState(null);
     const [confirmingId, setConfirmingId] = useState(null);
 
+    // Fermeture sur Échap, sauf si une ligne est en cours d'édition ou de
+    // confirmation : dans ce cas, Échap doit d'abord annuler la ligne
+    // (cohérent avec le comportement déjà présent sur les inputs internes),
+    // pas fermer tout le panneau d'un coup.
+    useEffect(() => {
+        if (!isOpen) return;
+        const handler = (e) => {
+            if (e.key !== "Escape") return;
+            if (editingId || confirmingId) return;
+            onClose();
+        };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, [isOpen, editingId, confirmingId, onClose]);
+
     if (!isOpen) return null;
 
     const alignment = align === "right" ? "right-0" : "left-0";
@@ -27,6 +42,8 @@ export function TagManager({
 
     return (
         <div
+            role="dialog"
+            aria-label="Gérer les tags"
             className={`absolute ${position} ${alignment} z-[95] w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
         >
             <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2 dark:border-zinc-700">
@@ -37,7 +54,7 @@ export function TagManager({
                     type="button"
                     onClick={onClose}
                     aria-label="Fermer"
-                    className="rounded p-0.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-zinc-700"
+                    className="rounded p-0.5 text-slate-400 outline-none hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-indigo-500 dark:hover:bg-zinc-700"
                 >
                     <CloseIcon className="h-4 w-4" />
                 </button>
@@ -92,7 +109,7 @@ function TagRow({ tag, onEdit, onDelete }) {
                 type="button"
                 onClick={onEdit}
                 aria-label={`Modifier ${tag.name}`}
-                className="rounded p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:hover:bg-zinc-600"
+                className="rounded p-1 text-slate-400 outline-none hover:bg-slate-200 hover:text-slate-600 focus-visible:ring-2 focus-visible:ring-indigo-500 dark:hover:bg-zinc-600"
             >
                 <EditIcon className="h-4 w-4" />
             </button>
@@ -100,7 +117,7 @@ function TagRow({ tag, onEdit, onDelete }) {
                 type="button"
                 onClick={onDelete}
                 aria-label={`Supprimer ${tag.name}`}
-                className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                className="rounded p-1 text-slate-400 outline-none hover:bg-red-50 hover:text-red-600 focus-visible:ring-2 focus-visible:ring-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
             >
                 <TrashIcon className="h-4 w-4" />
             </button>
@@ -129,9 +146,12 @@ function TagRowEditor({ tag, onDone }) {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && save()}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") save();
+                    if (e.key === "Escape") onDone();
+                }}
                 autoFocus
-                className="w-full rounded-md bg-white px-2 py-1 text-sm text-slate-700 ring-1 ring-slate-200 focus:ring-indigo-500 focus:outline-none dark:bg-zinc-800 dark:text-slate-200 dark:ring-zinc-700"
+                className="w-full rounded-md bg-white px-2 py-1 text-sm text-slate-700 outline-none ring-1 ring-slate-200 focus-visible:ring-2 focus-visible:ring-indigo-500 dark:bg-zinc-800 dark:text-slate-200 dark:ring-zinc-700"
             />
             <div className="flex flex-wrap gap-1.5">
                 {TAG_COLORS.map((c) => (
@@ -140,8 +160,9 @@ function TagRowEditor({ tag, onDone }) {
                         type="button"
                         onClick={() => setColor(c)}
                         aria-label={`Couleur ${c}`}
+                        aria-pressed={color === c}
                         style={{ backgroundColor: c }}
-                        className={`h-5 w-5 rounded-full transition-transform ${
+                        className={`h-5 w-5 rounded-full outline-none transition-transform focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400 dark:focus-visible:ring-offset-zinc-900 ${
                             color === c
                                 ? "scale-110 ring-2 ring-slate-400 ring-offset-1 dark:ring-offset-zinc-900"
                                 : "hover:scale-105"
@@ -158,7 +179,7 @@ function TagRowEditor({ tag, onDone }) {
                 <button
                     type="button"
                     onClick={onDone}
-                    className="rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-zinc-700"
+                    className="rounded px-2 py-1 text-xs text-slate-500 outline-none hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-400 dark:hover:bg-zinc-700"
                 >
                     Annuler
                 </button>
@@ -166,7 +187,7 @@ function TagRowEditor({ tag, onDone }) {
                     type="button"
                     onClick={save}
                     disabled={!name.trim() || updateTag.isPending}
-                    className="rounded bg-indigo-500 px-2 py-1 text-xs font-medium text-white hover:bg-indigo-600 disabled:opacity-50 dark:bg-indigo-600"
+                    className="rounded bg-indigo-500 px-2 py-1 text-xs font-medium text-white outline-none hover:bg-indigo-600 focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 dark:bg-indigo-600"
                 >
                     {updateTag.isPending ? "..." : "Enregistrer"}
                 </button>
@@ -193,7 +214,7 @@ function TagRowConfirm({ tag, onCancel }) {
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-zinc-700"
+                    className="rounded px-2 py-1 text-xs text-slate-500 outline-none hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-400 dark:hover:bg-zinc-700"
                 >
                     Annuler
                 </button>
@@ -203,7 +224,7 @@ function TagRowConfirm({ tag, onCancel }) {
                         deleteTag.mutate(tag.id, { onSuccess: onCancel })
                     }
                     disabled={deleteTag.isPending}
-                    className="rounded bg-red-500 px-2 py-1 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50"
+                    className="rounded bg-red-500 px-2 py-1 text-xs font-medium text-white outline-none hover:bg-red-600 focus-visible:ring-2 focus-visible:ring-red-500 disabled:opacity-50"
                 >
                     {deleteTag.isPending ? "..." : "Supprimer"}
                 </button>

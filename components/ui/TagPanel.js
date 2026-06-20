@@ -16,6 +16,7 @@ export function TagPanel({
     tags,
     onAdd,
     onRemove,
+    onClose,
     align = "right",
     direction = "down",
 }) {
@@ -27,6 +28,17 @@ export function TagPanel({
     useEffect(() => {
         if (!isOpen) setManagerOpen(false);
     }, [isOpen]);
+
+    // Fermeture sur Échap, seulement si un onClose a été fourni par
+    // l'appelant — certains appelants (ex: TaskContextMenu) gèrent déjà
+    // leur propre Échap au niveau du sous-menu parent et ne passent pas
+    // cette prop pour éviter une double fermeture en cascade.
+    useEffect(() => {
+        if (!isOpen || !onClose) return;
+        const handler = (e) => e.key === "Escape" && onClose();
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
@@ -69,6 +81,8 @@ export function TagPanel({
 
     return (
         <div
+            role="group"
+            aria-label="Gestion des étiquettes"
             className={`absolute ${position} ${alignment} z-[90] w-64 max-w-[calc(100vw-1rem)] overflow-visible rounded-xl bg-white p-3 shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
         >
             <div className="mb-3 flex items-center gap-2">
@@ -79,14 +93,15 @@ export function TagPanel({
                     onKeyDown={handleKeyDown}
                     placeholder="Créer ou rechercher…"
                     autoFocus
-                    className="flex-1 rounded-md bg-slate-50 px-2 py-1.5 text-sm text-slate-700 placeholder-slate-400 ring-1 ring-slate-200 focus:ring-indigo-500 focus:outline-none dark:bg-zinc-900 dark:text-slate-200 dark:ring-zinc-700 dark:placeholder-zinc-500"
+                    className="flex-1 rounded-md bg-slate-50 px-2 py-1.5 text-sm text-slate-700 placeholder-slate-400 outline-none ring-1 ring-slate-200 focus-visible:ring-2 focus-visible:ring-indigo-500 dark:bg-zinc-900 dark:text-slate-200 dark:ring-zinc-700 dark:placeholder-zinc-500"
                 />
                 <div className="relative">
                     <button
                         type="button"
                         onClick={() => setManagerOpen((v) => !v)}
                         aria-label="Gérer les tags"
-                        className={`rounded-md p-1.5 transition-colors ${
+                        aria-expanded={managerOpen}
+                        className={`rounded-md p-1.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                             managerOpen
                                 ? "bg-slate-100 text-slate-600 dark:bg-zinc-700 dark:text-slate-200"
                                 : "text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-zinc-700"
@@ -119,10 +134,11 @@ export function TagPanel({
                             <button
                                 key={t.id}
                                 type="button"
+                                aria-pressed={selected}
                                 onClick={() =>
                                     selected ? onRemove(t.name) : onAdd(t.name)
                                 }
-                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 transition-colors ${
+                                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium outline-none ring-1 transition-colors focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                                     selected
                                         ? "ring-2"
                                         : "ring-slate-200 hover:bg-slate-50 dark:ring-zinc-700 dark:hover:bg-zinc-700/50"

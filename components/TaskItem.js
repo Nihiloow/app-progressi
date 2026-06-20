@@ -26,6 +26,7 @@ export default function TaskItem({ task, isSelected, onSelect }) {
 
     const [contextMenu, setContextMenu] = useState(null); // { x, y } | null
     const longPressTimer = useRef(null);
+    const cardRef = useRef(null);
 
     const isDone = task.status === "DONE";
     const isAbandoned = task.status === "WONT_DO";
@@ -76,15 +77,41 @@ export default function TaskItem({ task, isSelected, onSelect }) {
         changeStatusMutation.mutate({ taskId: task.id, status });
     };
 
+    // Carte sélectionnable au clavier : Entrée/Espace ouvrent les détails,
+    // au même titre qu'un clic. La touche "Menu" (ou Shift+F10, équivalent
+    // clavier standard du clic droit) ouvre le menu contextuel, centré sur
+    // la carte plutôt qu'à la position du curseur (qui n'a pas de sens au
+    // clavier).
+    const handleCardKeyDown = (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onSelect(task.id);
+            return;
+        }
+        if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+            e.preventDefault();
+            const rect = cardRef.current?.getBoundingClientRect();
+            if (rect) openContextMenu(rect.left, rect.bottom);
+        }
+    };
+
     return (
         <>
             <div
+                ref={cardRef}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                aria-label={`Quête : ${task.title}. ${
+                    isDone ? "Validée" : isAbandoned ? "Abandonnée" : "En cours"
+                }. Appuyez sur Entrée pour voir les détails, sur le menu contextuel pour les options.`}
                 onClick={() => onSelect(task.id)}
+                onKeyDown={handleCardKeyDown}
                 onContextMenu={handleContextMenu}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={cancelLongPress}
                 onTouchMove={cancelLongPress}
-                className={`flex cursor-pointer items-center gap-4 rounded-xl border p-3 transition-all duration-200 ${
+                className={`flex cursor-pointer items-center gap-4 rounded-xl border p-3 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950 ${
                     isSelected
                         ? "border-indigo-500 bg-indigo-50/50 shadow-sm dark:border-indigo-500/50 dark:bg-indigo-500/10"
                         : "border-slate-200 bg-white shadow-sm hover:border-slate-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"

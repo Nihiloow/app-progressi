@@ -142,6 +142,7 @@ export default function TaskForm() {
                             tags={tags}
                             onAdd={addTag}
                             onRemove={removeTag}
+                            onClose={() => setOpenMenu(null)}
                             align="right"
                         />
                     </div>

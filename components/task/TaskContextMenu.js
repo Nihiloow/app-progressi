@@ -63,6 +63,21 @@ export function TaskContextMenu({
         };
     }, [onClose]);
 
+    // Fermeture sur Échap : ferme le sous-menu s'il est ouvert, sinon ferme
+    // le menu entier. Permet de revenir au sous-menu sans tout perdre.
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key !== "Escape") return;
+            if (subMenu) {
+                setSubMenu(null);
+            } else {
+                onClose();
+            }
+        };
+        document.addEventListener("keydown", handler);
+        return () => document.removeEventListener("keydown", handler);
+    }, [subMenu, onClose]);
+
     const style = {
         position: "fixed",
         top: position.y,
@@ -98,7 +113,16 @@ export function TaskContextMenu({
     return (
         <div
             ref={menuRef}
+            role="menu"
+            aria-label="Options de la quête"
             style={style}
+            // PAS de overflow-hidden ici : un sous-menu (OptionMenu, TagPanel)
+            // s'ouvre en position absolute à droite via left-full, donc hors
+            // de la boîte de ce conteneur — overflow-hidden le rognerait
+            // entièrement (bug constaté : sous-menu invisible bien que monté
+            // dans le DOM). L'arrondi des coins est géré directement sur le
+            // premier et le dernier item interactif (rounded-t-lg / rounded-b-lg)
+            // pour éviter que leur survol dépasse visuellement du conteneur.
             className="min-w-[220px] rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
         >
             {/* Priorité */}
@@ -109,7 +133,11 @@ export function TaskContextMenu({
             >
                 <button
                     type="button"
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-800"
+                    role="menuitem"
+                    aria-haspopup="true"
+                    aria-expanded={subMenu === "priority"}
+                    onFocus={() => handleRowEnter("priority")}
+                    className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm text-slate-700 outline-none transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800"
                 >
                     <LightningIcon
                         className={`h-4 w-4 ${getPriorityConfig(task.priority).color}`}
@@ -138,7 +166,11 @@ export function TaskContextMenu({
             >
                 <button
                     type="button"
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-800"
+                    role="menuitem"
+                    aria-haspopup="true"
+                    aria-expanded={subMenu === "type"}
+                    onFocus={() => handleRowEnter("type")}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 outline-none transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800"
                 >
                     {(() => {
                         const cfg = getTypeConfig(task.taskType);
@@ -167,7 +199,11 @@ export function TaskContextMenu({
             >
                 <button
                     type="button"
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-800"
+                    role="menuitem"
+                    aria-haspopup="true"
+                    aria-expanded={subMenu === "tags"}
+                    onFocus={() => handleRowEnter("tags")}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 outline-none transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 dark:text-slate-200 dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800"
                 >
                     <TagIcon className="h-4 w-4 text-slate-500" />
                     Étiquettes
@@ -221,8 +257,9 @@ export function TaskContextMenu({
             {/* Ne fera pas / Réactiver */}
             <button
                 type="button"
+                role="menuitem"
                 onClick={handleWontDo}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-zinc-800"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm outline-none transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800"
             >
                 <BanIcon className="h-4 w-4 text-slate-500" />
                 <span
@@ -241,11 +278,12 @@ export function TaskContextMenu({
             {/* Supprimer — destructif, rouge pour signal visuel clair */}
             <button
                 type="button"
+                role="menuitem"
                 onClick={() => {
                     onDeleteTask();
                     onClose();
                 }}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-50 focus-visible:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:focus-visible:bg-red-500/10"
             >
                 <TrashIcon className="h-4 w-4" />
                 Supprimer la quête

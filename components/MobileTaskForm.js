@@ -106,6 +106,7 @@ export default function MobileTaskForm({ isOpen, onClose }) {
                                     tags={tags}
                                     onAdd={addTag}
                                     onRemove={removeTag}
+                                    onClose={() => setOpenMenu(null)}
                                     align="left"
                                     direction="up"
                                 />

@@ -4,6 +4,8 @@
 
 "use client";
 
+import { useEffect, useRef } from "react";
+
 export function OptionMenu({
     isOpen,
     onClose,
@@ -13,6 +15,22 @@ export function OptionMenu({
     align = "left",
     withOverlay = false, // mobile : un voile transparent capte le clic extérieur
 }) {
+    const menuRef = useRef(null);
+
+    // Fermeture sur Échap uniquement — pas de focus automatique du premier
+    // item : ça avait introduit un décalage visuel du popover (un focus
+    // programmatique peut déclencher un scroll-into-view du navigateur,
+    // qui perturbe le positionnement absolute calculé au même cycle de
+    // rendu). La navigation clavier reste possible via Tab normal.
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handler = (e) => e.key === "Escape" && onClose();
+        document.addEventListener("keydown", handler);
+
+        return () => document.removeEventListener("keydown", handler);
+    }, [isOpen, onClose]);
+
     if (!isOpen) return null;
 
     // "right" : sous-menu latéral façon TickTick — s'ouvre à droite du panneau
@@ -39,6 +57,8 @@ export function OptionMenu({
                 />
             )}
             <div
+                ref={menuRef}
+                role="menu"
                 className={`absolute ${positionClass} z-[90] w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
             >
                 <div className="flex flex-col py-1">
@@ -49,11 +69,12 @@ export function OptionMenu({
                             <button
                                 key={option.value}
                                 type="button"
+                                role="menuitem"
                                 onClick={() => {
                                     onSelect(option.value);
                                     onClose();
                                 }}
-                                className="flex items-center gap-3 px-4 py-3 text-left text-sm font-medium hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                                className="flex items-center gap-3 px-4 py-3 text-left text-sm font-medium outline-none hover:bg-slate-50 focus-visible:bg-slate-50 dark:hover:bg-zinc-700/50 dark:focus-visible:bg-zinc-700/50"
                             >
                                 <Icon
                                     className={`h-4 w-4 ${option.iconColor}`}
