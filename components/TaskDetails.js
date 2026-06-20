@@ -11,70 +11,49 @@ import { ListIcon } from "@/components/ui/icons";
 import { resolveTagColor } from "@/core/config/tagColors";
 import { MarkdownView } from "@/components/ui/MarkdownView";
 import { useUpdateTask } from "@/hooks/useUpdateTask";
+import { useEditableField } from "@/hooks/useEditableField";
 
-// Titre éditable inline : <span> en lecture, <input> au clic.
-// Sauvegarde onBlur si la valeur a changé et est valide (≥ 3 caractères).
-// Abandon sur Échap : restaure la valeur d'origine.
+// Titre éditable inline : <h2> en lecture, <input> au simple clic.
+// Pendant de EditableTaskTitle (TaskItem) : même mécanique d'édition via
+// useEditableField, rendu et déclencheur différents (h2/clic vs span/double-clic,
+// pas de stopPropagation nécessaire ici car pas de carte parente cliquable).
 function EditableTitle({ task, onSave }) {
-    const [isEditing, setIsEditing] = useState(false);
-    const [value, setValue] = useState(task.title);
-    const inputRef = useRef(null);
+    const {
+        isEditing,
+        draft,
+        setDraft,
+        fieldRef,
+        startEditing,
+        commit,
+        handleKeyDown,
+    } = useEditableField(task.title, {
+        onSave: (value) => onSave({ title: value }),
+        validate: (value) => value.length >= 3,
+    });
 
-    // Synchronise si la tâche sélectionnée change (selectedTaskId dans le parent).
-    useEffect(() => {
-        setValue(task.title);
-        setIsEditing(false);
-    }, [task.id, task.title]);
-
-    useEffect(() => {
-        if (isEditing) inputRef.current?.select();
-    }, [isEditing]);
-
-    const handleBlur = () => {
-        const trimmed = value.trim();
-        if (trimmed.length >= 3 && trimmed !== task.title) {
-            onSave({ title: trimmed });
-        } else {
-            // Valeur invalide ou inchangée : on restaure
-            setValue(task.title);
-        }
-        setIsEditing(false);
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === "Enter") inputRef.current?.blur();
-        if (e.key === "Escape") {
-            setValue(task.title);
-            setIsEditing(false);
-        }
-    };
+    const titleClass =
+        task.status === "TODO"
+            ? "text-slate-800 dark:text-slate-100"
+            : "text-slate-400 line-through";
 
     if (isEditing) {
         return (
             <input
-                ref={inputRef}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onBlur={handleBlur}
+                ref={fieldRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commit}
                 onKeyDown={handleKeyDown}
-                className={`w-full bg-transparent text-xl font-bold leading-tight focus:outline-none ${
-                    task.status === "TODO"
-                        ? "text-slate-800 dark:text-slate-100"
-                        : "text-slate-400 line-through"
-                }`}
+                className={`w-full bg-transparent text-xl font-bold leading-tight focus:outline-none ${titleClass}`}
             />
         );
     }
 
     return (
         <h2
-            onClick={() => setIsEditing(true)}
+            onClick={startEditing}
             title="Cliquer pour modifier le titre"
-            className={`cursor-text text-xl font-bold leading-tight ${
-                task.status === "TODO"
-                    ? "text-slate-800 dark:text-slate-100"
-                    : "text-slate-400 line-through"
-            }`}
+            className={`cursor-text text-xl font-bold leading-tight ${titleClass}`}
         >
             {task.title}
         </h2>
@@ -82,8 +61,9 @@ function EditableTitle({ task, onSave }) {
 }
 
 // Description éditable inline : MarkdownView en lecture, textarea au clic.
-// Sauvegarde onBlur si la valeur a changé.
-// Une description vidée repasse à null (pas de chaîne vide en base).
+// Reste tel quel (logique propre : saut de ligne autorisé, normalisation
+// "" → null) — ne partage pas assez avec EditableTitle pour justifier
+// de forcer le même hook (validate différent, allowNewline, placeholder vide).
 function EditableDescription({ task, onSave }) {
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState(task.description ?? "");

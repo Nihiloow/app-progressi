@@ -104,3 +104,18 @@ export function formatShortDate(dateString) {
         month: "short",
     });
 }
+
+// Couleur de la date d'échéance selon son rapport au jour courant.
+// Dépassée → rouge, aujourd'hui → indigo, future → ardoise.
+// Déplacé depuis TaskItem.js : c'est une règle de présentation pure,
+// au même titre que les configs de priorité/type ci-dessus.
+export function dueDateColor(dueDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    if (due < today) return "text-red-500 dark:text-red-400";
+    if (due.getTime() === today.getTime())
+        return "text-indigo-500 dark:text-indigo-400";
+    return "text-slate-400 dark:text-zinc-500";
+}
