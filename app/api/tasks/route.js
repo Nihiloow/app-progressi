@@ -1,26 +1,18 @@
 // Destination : app/api/tasks/route.js
 
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/requireSession";
 import { createTaskSchema } from "@/core/validation/taskSchema";
 import { handleApiError } from "@/lib/handleApiError";
 import { taskService } from "@/core/services/TaskService";
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const tasks = await prisma.task.findMany({
-            where: { userId: session.user.id },
+            where: { userId: user.id },
             orderBy: { createdAt: "desc" },
             include: { tags: true },
         });
@@ -36,14 +28,7 @@ export async function GET() {
 
 export async function POST(request) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const body = await request.json();
         const result = createTaskSchema.safeParse(body);
@@ -55,10 +40,7 @@ export async function POST(request) {
             );
         }
 
-        const newTask = await taskService.createTask(
-            session.user.id,
-            result.data,
-        );
+        const newTask = await taskService.createTask(user.id, result.data);
 
         return NextResponse.json(newTask, { status: 201 });
     } catch (error) {

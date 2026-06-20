@@ -54,6 +54,15 @@ export class ForbiddenError extends DomainError {
     }
 }
 
+export class UnauthenticatedError extends DomainError {
+    constructor() {
+        // 401 et non 403 : ici l'identité elle-même n'est pas établie
+        // (pas de session valide), contrairement à ForbiddenError où
+        // l'identité est connue mais insuffisamment privilégiée.
+        super("Non autorisé.", 401);
+    }
+}
+
 export class SelfTargetError extends DomainError {
     constructor() {
         // Un admin ne peut pas se désactiver ni se supprimer lui-même :
@@ -62,5 +71,13 @@ export class SelfTargetError extends DomainError {
             "Vous ne pouvez pas appliquer cette action à votre propre compte.",
             409,
         );
+    }
+}
+
+export class EmailAlreadyUsedError extends DomainError {
+    constructor() {
+        // 409 : conflit avec une ressource existante (même sémantique que
+        // le P2002 Prisma qu'elle remplace pour le cas pré-vérifié).
+        super("Cet email est déjà utilisé par un autre héros.", 409);
     }
 }

@@ -1,20 +1,12 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/requireSession";
 import { tagService } from "@/core/services/TagService";
 import { updateTagSchema } from "@/core/validation/tagSchema";
 import { handleApiError } from "@/lib/handleApiError";
 
 export async function PATCH(request, { params }) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const { id } = await params;
         const body = await request.json();
@@ -27,7 +19,7 @@ export async function PATCH(request, { params }) {
             );
         }
 
-        const tag = await tagService.update(id, session.user.id, result.data);
+        const tag = await tagService.update(id, user.id, result.data);
 
         return NextResponse.json(tag, { status: 200 });
     } catch (error) {
@@ -37,18 +29,11 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const { id } = await params;
 
-        await tagService.remove(id, session.user.id);
+        await tagService.remove(id, user.id);
 
         return NextResponse.json({ message: "Tag supprimé." }, { status: 200 });
     } catch (error) {

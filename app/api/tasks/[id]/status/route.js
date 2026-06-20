@@ -1,10 +1,8 @@
 // Destination : app/api/tasks/[id]/status/route.js
-// REMPLACE app/api/tasks/[id]/complete/ (dossier à supprimer entièrement)
 
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { z } from "zod";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/requireSession";
 import { taskService } from "@/core/services/TaskService";
 import { handleApiError } from "@/lib/handleApiError";
 
@@ -17,14 +15,7 @@ const statusSchema = z.object({
 
 export async function PATCH(request, { params }) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const { id } = await params;
         const body = await request.json();
@@ -39,7 +30,7 @@ export async function PATCH(request, { params }) {
 
         const outcome = await taskService.changeStatus(
             id,
-            session.user.id,
+            user.id,
             result.data.status,
         );
 

@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/requireSession";
 import { tagService } from "@/core/services/TagService";
 import { createTagSchema } from "@/core/validation/tagSchema";
 import { handleApiError } from "@/lib/handleApiError";
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions);
+        const user = await requireSession();
 
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
-
-        const tags = await tagService.list(session.user.id);
+        const tags = await tagService.list(user.id);
 
         return NextResponse.json(tags, { status: 200 });
     } catch (error) {
@@ -29,14 +21,7 @@ export async function GET() {
 
 export async function POST(request) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const body = await request.json();
         const result = createTagSchema.safeParse(body);
@@ -49,7 +34,7 @@ export async function POST(request) {
         }
 
         // Doublon (name, userId) → P2002 → 409 via handleApiError
-        const tag = await tagService.create(session.user.id, result.data);
+        const tag = await tagService.create(user.id, result.data);
 
         return NextResponse.json(tag, { status: 201 });
     } catch (error) {

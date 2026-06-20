@@ -1,9 +1,8 @@
 // Destination : app/api/auth/register/route.js
 
 import { NextResponse } from "next/server";
-import bcrypt from "bcrypt";
-import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/core/validation/userSchema";
+import { authService } from "@/core/services/AuthService";
 import { handleApiError } from "@/lib/handleApiError";
 
 export async function POST(request) {
@@ -18,34 +17,17 @@ export async function POST(request) {
             );
         }
 
-        // Données validées ET normalisées (email en minuscules, champs trim)
-        const { email, pseudo, password } = result.data;
-
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
-        });
-
-        if (existingUser) {
-            return NextResponse.json(
-                { error: "Cet email est déjà utilisé par un autre héros." },
-                { status: 409 },
-            );
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        await prisma.user.create({
-            data: { email, pseudo, password: hashedPassword },
-        });
+        await authService.register(result.data);
 
         return NextResponse.json(
             { message: "Compte créé avec succès !" },
             { status: 201 },
         );
     } catch (error) {
-        // Filet anti-course : deux inscriptions simultanées avec le même
-        // email passent toutes deux le check ci-dessus, mais la contrainte
-        // @unique en base fait échouer la seconde (code Prisma P2002)
+        // Filet anti-course : la vérification findUnique de AuthService.register
+        // peut être doublée par deux requêtes concurrentes (même email) — la
+        // seconde échoue ici sur la contrainte @unique en base (P2002), avec
+        // un message plus parlant que le générique de handleApiError.
         if (error.code === "P2002") {
             return NextResponse.json(
                 { error: "Cet email est déjà utilisé par un autre héros." },

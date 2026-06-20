@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/requireSession";
 import { updateTaskSchema } from "@/core/validation/taskSchema";
 import { TaskNotFoundError } from "@/core/errors/domainErrors";
 import { handleApiError } from "@/lib/handleApiError";
@@ -27,14 +26,7 @@ async function assertTaskOwnership(taskId, userId) {
 // par la route /status qui délègue au TaskService (XP, quotas, ledger).
 export async function PATCH(request, { params }) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const { id } = await params;
         const body = await request.json();
@@ -52,7 +44,7 @@ export async function PATCH(request, { params }) {
 
         const updatedTask = await taskService.updateTask(
             id,
-            session.user.id,
+            user.id,
             result.data,
         );
 
@@ -64,18 +56,11 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user) {
-            return NextResponse.json(
-                { error: "Non autorisé." },
-                { status: 401 },
-            );
-        }
+        const user = await requireSession();
 
         const { id } = await params;
 
-        await assertTaskOwnership(id, session.user.id);
+        await assertTaskOwnership(id, user.id);
 
         // Le ledger XpEvent survit à la suppression (onDelete: SetNull) :
         // supprimer une quête complétée ne rembourse rien, ne libère pas de
