@@ -4,10 +4,12 @@ import { SelfTargetError } from "../errors/domainErrors";
 // Orchestrateur métier de l'administration des comptes (exigence CDC).
 // Reçoit son client DB par injection (testabilité), exposé en singleton.
 //
-// Deux leviers distincts sur un compte :
+// Trois leviers distincts sur un compte :
 //   - setStatus : ACTIVE ↔ DISABLED, réversible, ne perd aucune donnée.
 //   - deleteUser : hard-delete, cascade Prisma sur tasks/tags/xpEvents.
-// Un admin ne peut jamais cibler son propre compte sur ces deux actions.
+//   - resetProgression : remet xp/level à leur valeur initiale, SANS
+//     toucher au ledger XpEvent (cf. resetProgression ci-dessous).
+// Un admin ne peut jamais cibler son propre compte sur ces trois actions.
 export class UserService {
     #db;
 
@@ -54,6 +56,31 @@ export class UserService {
         }
 
         await this.#db.user.delete({ where: { id: targetUserId } });
+    }
+
+    // Remet la progression d'un compte à son état initial (xp=0, level=1).
+    // Décision actée : le ledger XpEvent N'EST PAS purgé. Il reste le
+    // journal d'audit append-only de tout ce qui a été gagné avant le
+    // reset — cohérent avec le principe déjà posé partout ailleurs dans
+    // le projet (User.xp/level = cache, XpEvent = vérité historique). Un
+    // reset change le cache, jamais l'historique : exactement comme un
+    // changement de priorité sur une tâche complétée ne réécrit pas
+    // l'XpEvent déjà créé avec l'ancienne priorité figée.
+    //
+    // Conséquence assumée : la timeline XP admin (30 jours) continuera
+    // d'afficher les gains antérieurs de ce compte même après son reset.
+    // C'est correct historiquement — un reset n'efface pas ce qui s'est
+    // réellement passé, il repart simplement à zéro pour l'avenir.
+    async resetProgression(targetUserId, adminId) {
+        if (targetUserId === adminId) {
+            throw new SelfTargetError();
+        }
+
+        return this.#db.user.update({
+            where: { id: targetUserId },
+            data: { xp: 0, level: 1 },
+            select: { id: true, xp: true, level: true },
+        });
     }
 
     // Statistiques globales (CDC) : agrégées en base, jamais en mémoire

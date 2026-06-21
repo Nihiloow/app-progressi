@@ -4,13 +4,17 @@ import { useState } from "react";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import { useSetUserStatus } from "@/hooks/useSetUserStatus";
 import { useDeleteUser } from "@/hooks/useDeleteUser";
+import { useResetProgression } from "@/hooks/useResetProgression";
 import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog";
+import { ResetProgressionDialog } from "@/components/admin/ResetProgressionDialog";
 
 export default function AdminUsersPage() {
     const { data: users, isLoading, error } = useAdminUsers();
     const setStatus = useSetUserStatus();
     const deleteUser = useDeleteUser();
+    const resetProgression = useResetProgression();
     const [userToDelete, setUserToDelete] = useState(null);
+    const [userToReset, setUserToReset] = useState(null);
 
     if (isLoading) {
         return (
@@ -46,6 +50,12 @@ export default function AdminUsersPage() {
     const handleConfirmDelete = (userId) => {
         deleteUser.mutate(userId, {
             onSuccess: () => setUserToDelete(null),
+        });
+    };
+
+    const handleConfirmReset = (userId) => {
+        resetProgression.mutate(userId, {
+            onSuccess: () => setUserToReset(null),
         });
     };
 
@@ -106,6 +116,12 @@ export default function AdminUsersPage() {
                                 <td className="px-4 py-3">
                                     <div className="flex justify-end gap-2">
                                         <button
+                                            onClick={() => setUserToReset(user)}
+                                            className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10"
+                                        >
+                                            Réinitialiser
+                                        </button>
+                                        <button
                                             onClick={() =>
                                                 handleToggleStatus(user)
                                             }
@@ -138,6 +154,15 @@ export default function AdminUsersPage() {
                     onConfirm={handleConfirmDelete}
                     onCancel={() => setUserToDelete(null)}
                     isPending={deleteUser.isPending}
+                />
+            )}
+
+            {userToReset && (
+                <ResetProgressionDialog
+                    user={userToReset}
+                    onConfirm={handleConfirmReset}
+                    onCancel={() => setUserToReset(null)}
+                    isPending={resetProgression.isPending}
                 />
             )}
         </main>
