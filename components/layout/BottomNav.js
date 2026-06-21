@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import {
     ListIcon,
-    CalendarIcon,
+    FlameIcon,
     FocusIcon,
     DashboardIcon,
 } from "@/components/ui/icons";
@@ -13,6 +13,10 @@ import {
 // Nav mobile basse. Les icônes viennent du barrel (règle d'or : zéro
 // émoji dans l'UI). L'actif est calculé par usePathname, comme la Sidebar.
 // L'entrée admin n'apparaît que pour les comptes ADMIN.
+//
+// Le bouton "Agenda" (mort, aucune route derrière) est remplacé par
+// "Habitudes" : Focus reste intact, volontairement, au cas où Nathan a
+// déjà une idée de fonctionnalité pour ce slot.
 export default function BottomNav() {
     const pathname = usePathname();
     const { data: user } = useUser();
@@ -30,10 +34,13 @@ export default function BottomNav() {
                     <span className="text-[10px] font-semibold">Tâches</span>
                 </Link>
 
-                <button className="flex flex-col items-center justify-center gap-1 text-slate-400 transition-transform hover:text-slate-600 active:scale-95 dark:text-zinc-500 dark:hover:text-zinc-300">
-                    <CalendarIcon className="h-6 w-6" />
-                    <span className="text-[10px] font-medium">Agenda</span>
-                </button>
+                <Link
+                    href="/dashboard/habits"
+                    className={itemClass("/dashboard/habits")}
+                >
+                    <FlameIcon className="h-6 w-6" />
+                    <span className="text-[10px] font-medium">Habitudes</span>
+                </Link>
 
                 {/* Espace central : réserve pour le futur bouton + flottant */}
                 <div className="w-12"></div>

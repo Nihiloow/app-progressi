@@ -4,7 +4,7 @@ import AvatarProgress from "@/components/AvatarProgress";
 import { useUser } from "@/hooks/useUser";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DashboardIcon, UsersIcon } from "@/components/ui/icons";
+import { DashboardIcon, UsersIcon, FlameIcon } from "@/components/ui/icons";
 
 export default function Sidebar() {
     const { data: user, isLoading } = useUser();
@@ -46,9 +46,13 @@ export default function Sidebar() {
                 <Link href="/dashboard" className={linkClass("/dashboard")}>
                     Tasks
                 </Link>
-                <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">
-                    ...
-                </button>
+                <Link
+                    href="/dashboard/habits"
+                    className={linkClass("/dashboard/habits")}
+                >
+                    <FlameIcon className="h-4 w-4" />
+                    Habitudes
+                </Link>
                 <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">
                     ...
                 </button>
