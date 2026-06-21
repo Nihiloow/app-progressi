@@ -2,6 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { XpToastProvider } from "@/components/feedback/XpToastProvider";
+import { XpToast } from "@/components/feedback/XpToast";
 
 export default function Providers({ children }) {
     // On utilise useState pour s'assurer que le QueryClient n'est instancié qu'une seule fois,
@@ -10,7 +12,10 @@ export default function Providers({ children }) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            {children}
+            <XpToastProvider>
+                {children}
+                <XpToast />
+            </XpToastProvider>
         </QueryClientProvider>
     );
 }
