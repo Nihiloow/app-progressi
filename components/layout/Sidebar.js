@@ -50,7 +50,6 @@ export default function Sidebar() {
                     href="/dashboard/habits"
                     className={linkClass("/dashboard/habits")}
                 >
-                    <FlameIcon className="h-4 w-4" />
                     Habitudes
                 </Link>
                 <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">

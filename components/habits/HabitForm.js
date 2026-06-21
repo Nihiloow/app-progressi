@@ -1,101 +1,108 @@
 "use client";
 
-import { useCompleteHabit } from "@/hooks/useCompleteHabit";
-import { isStreakAlive } from "@/core/engine/streak";
-import { getPriorityConfig } from "@/components/ui/taskAppearance";
-import { FlameIcon, CheckIcon } from "@/components/ui/icons";
+import { useState, useRef, useEffect } from "react";
+import { useCreateHabit } from "@/hooks/useCreateHabit";
+import { OptionMenu } from "@/components/ui/OptionMenu";
+import {
+    PRIORITY_OPTIONS,
+    getPriorityConfig,
+} from "@/components/ui/taskAppearance";
+import { LightningIcon, PlusIcon } from "@/components/ui/icons";
 
-// Détermine si l'habitude a déjà été validée aujourd'hui, côté front,
-// SANS appel serveur supplémentaire : on compare lastCompletedOn (déjà
-// présent dans la réponse de GET /api/habits) au jour calendaire courant.
-// Même logique que core/engine/streak.js#isStreakAlive, réutilisée pour
-// éviter une seconde source de vérité sur "c'est aujourd'hui ou pas".
-function isDoneToday(lastCompletedOn) {
-    if (!lastCompletedOn) return false;
-    const today = new Date();
-    const last = new Date(lastCompletedOn);
-    return (
-        today.getFullYear() === last.getFullYear() &&
-        today.getMonth() === last.getMonth() &&
-        today.getDate() === last.getDate()
-    );
-}
+// Formulaire de création d'habitude. Volontairement plus court que
+// TaskForm : ni date d'échéance (une habitude est récurrente, pas
+// ponctuelle), ni type cognitif (DEEP_WORK/SHALLOW_WORK n'a pas de sens
+// pour une routine répétée), ni tags (non demandés par le CDC pour les
+// habitudes). YAGNI : on n'ajoute pas ces champs avant qu'un besoin réel
+// les justifie.
+export default function HabitForm() {
+    const [title, setTitle] = useState("");
+    const [priority, setPriority] = useState("NONE");
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const containerRef = useRef(null);
 
-export function HabitItem({ habit }) {
-    const completeHabit = useCompleteHabit();
-    const priorityConfig = getPriorityConfig(habit.priority);
+    const createHabit = useCreateHabit();
 
-    const doneToday = isDoneToday(habit.lastCompletedOn);
-    // Le streak affiché est "vivant" seulement s'il n'a pas été rompu par
-    // un jour sauté — calcul paresseux, jamais corrigé en base à la lecture
-    // (cf. core/engine/streak.js). Si rompu, on affiche 0 même si le champ
-    // brut en base indique encore une ancienne valeur non recalculée.
-    const effectiveStreak = isStreakAlive(habit.lastCompletedOn)
-        ? habit.currentStreak
-        : 0;
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (
+                containerRef.current &&
+                !containerRef.current.contains(e.target)
+            ) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener("pointerdown", handleClickOutside);
+        return () =>
+            document.removeEventListener("pointerdown", handleClickOutside);
+    }, []);
 
-    const handleComplete = () => {
-        if (doneToday || completeHabit.isPending) return;
-        completeHabit.mutate(habit.id);
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!title.trim() || createHabit.isPending) return;
+
+        createHabit.mutate(
+            { title, priority },
+            {
+                onSuccess: () => {
+                    setTitle("");
+                    setPriority("NONE");
+                    setIsMenuOpen(false);
+                },
+            },
+        );
     };
 
+    const currentPriority = getPriorityConfig(priority);
+
     return (
-        <div
-            className={`flex items-center gap-4 rounded-xl border p-3 transition-all duration-200 ${
-                doneToday
-                    ? "border-slate-200 bg-slate-50 dark:border-zinc-800 dark:bg-zinc-900/50"
-                    : "border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
-            }`}
-        >
-            <button
-                onClick={handleComplete}
-                disabled={doneToday || completeHabit.isPending}
-                aria-label={
-                    doneToday
-                        ? "Habitude déjà validée aujourd'hui"
-                        : "Valider l'habitude du jour"
-                }
-                className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950 ${
-                    doneToday
-                        ? "cursor-not-allowed border-indigo-500 bg-indigo-500 text-white dark:border-indigo-600 dark:bg-indigo-600"
-                        : `cursor-pointer ${priorityConfig.ring} hover:bg-slate-50 dark:hover:bg-zinc-800`
-                } ${completeHabit.isPending ? "cursor-wait opacity-50" : ""}`}
+        <div className="relative mb-6" ref={containerRef}>
+            <form
+                onSubmit={handleSubmit}
+                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2 pr-3 shadow-sm transition-all focus-within:border-indigo-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-500/10 dark:border-zinc-800 dark:bg-zinc-900/50 dark:focus-within:bg-zinc-950"
             >
-                {doneToday && <CheckIcon className="h-4 w-4" />}
-            </button>
-
-            <div className="flex flex-1 flex-col overflow-hidden">
-                <span
-                    className={`truncate text-sm font-medium ${
-                        doneToday
-                            ? "text-slate-400 dark:text-zinc-500"
-                            : "text-slate-800 dark:text-slate-200"
-                    }`}
-                >
-                    {habit.title}
-                </span>
-                <div className="mt-1 flex items-center gap-3">
-                    <span
-                        className={`flex items-center gap-1 text-xs font-semibold ${
-                            effectiveStreak > 0
-                                ? "text-amber-500 dark:text-amber-400"
-                                : "text-slate-400 dark:text-zinc-500"
-                        }`}
-                    >
-                        <FlameIcon className="h-3.5 w-3.5" />
-                        {effectiveStreak} jour{effectiveStreak > 1 ? "s" : ""}
-                    </span>
-                    {habit.bestStreak > 0 && (
-                        <span className="text-xs text-slate-400 dark:text-zinc-500">
-                            Record : {habit.bestStreak}
-                        </span>
-                    )}
+                <div className="pl-3 text-slate-400">
+                    <PlusIcon className="h-5 w-5" />
                 </div>
-            </div>
 
-            {completeHabit.isError && (
-                <p className="text-xs text-red-500">
-                    {completeHabit.error.message}
+                <input
+                    type="text"
+                    placeholder="Quelle nouvelle habitude ?"
+                    className="min-w-0 flex-1 bg-transparent p-2 font-medium text-slate-800 placeholder-slate-400 focus:outline-none dark:text-slate-100 dark:placeholder-zinc-500"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={createHabit.isPending}
+                />
+                <button
+                    type="submit"
+                    className="hidden"
+                    disabled={!title.trim() || createHabit.isPending}
+                >
+                    Créer
+                </button>
+
+                <div className="relative border-l border-slate-200 pl-2 dark:border-zinc-800">
+                    <button
+                        type="button"
+                        onClick={() => setIsMenuOpen((v) => !v)}
+                        title="Priorité (détermine l'XP de base)"
+                        className={`flex h-9 w-9 items-center justify-center rounded transition-colors hover:bg-slate-200 dark:hover:bg-zinc-800 ${currentPriority.color} ${currentPriority.bg}`}
+                    >
+                        <LightningIcon className="h-5 w-5" />
+                    </button>
+                    <OptionMenu
+                        isOpen={isMenuOpen}
+                        onClose={() => setIsMenuOpen(false)}
+                        onSelect={setPriority}
+                        options={PRIORITY_OPTIONS}
+                        align="right"
+                    />
+                </div>
+            </form>
+
+            {createHabit.isError && (
+                <p className="mt-2 text-sm text-red-500">
+                    {createHabit.error.message}
                 </p>
             )}
         </div>
