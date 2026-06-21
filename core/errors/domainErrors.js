@@ -81,3 +81,20 @@ export class EmailAlreadyUsedError extends DomainError {
         super("Cet email est déjà utilisé par un autre héros.", 409);
     }
 }
+
+export class HabitNotFoundError extends DomainError {
+    constructor() {
+        // 404 identique que l'habitude n'existe pas OU appartienne à un
+        // autre utilisateur — même rationale que TaskNotFoundError.
+        super("Habitude introuvable.", 404);
+    }
+}
+
+export class HabitAlreadyCompletedError extends DomainError {
+    constructor() {
+        // 409 : conflit avec l'état actuel (le jour est déjà validé),
+        // pas une faute de validation de forme (400) ni une absence de
+        // ressource (404).
+        super("Cette habitude a déjà été validée aujourd'hui.", 409);
+    }
+}

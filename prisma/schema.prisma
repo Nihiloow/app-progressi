@@ -51,6 +51,15 @@ enum XpEventType {
   REFUND
 }
 
+// Fréquence de l'habitude. Seul DAILY est implémenté en v1 — le CDC ne
+// demande que des "jours consécutifs". WEEKLY existe dans l'enum pour ne
+// pas fermer la porte au schéma, mais le service rejette tout ce qui n'est
+// pas DAILY (YAGNI : pas de logique de calcul de streak hebdo demandée).
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+}
+
 // ─── Modèles ─────────────────────────────────────────────────────────────────
 
 model User {
@@ -64,6 +73,7 @@ model User {
   level     Int           @default(1)
   tasks     Task[]
   tags      Tag[]
+  habits    Habit[]
   xpEvents  XpEvent[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -93,8 +103,6 @@ model Task {
 
   // La liste des tâches filtre par userId et trie par createdAt desc :
   // cet index sert le filtre ET le tri (scan d'index pré-trié, pas de sort).
-  // (Le quota journalier compte désormais des XpEvent, plus des Task :
-  // l'ancien index [userId, status, completedAt] ne servait plus aucune requête.)
   @@index([userId, createdAt])
 }
 
@@ -116,6 +124,54 @@ model Tag {
   @@index([userId])
 }
 
+// Habitude récurrente (quête répétée, distincte de Task = quête unique).
+// currentStreak/bestStreak/lastCompletedOn sont un CACHE de lecture,
+// recalculé en transaction — même pattern que User.xp/level : la source de
+// vérité réelle est HabitCompletion (append-only), jamais ce cache.
+model Habit {
+  id         String         @id @default(uuid())
+  title      String
+  frequency  HabitFrequency @default(DAILY)
+  priority   Priority       @default(NONE)
+  isArchived Boolean        @default(false)
+
+  currentStreak   Int       @default(0)
+  bestStreak      Int       @default(0)
+  // Jour calendaire de la dernière validation (toujours normalisé à 00:00
+  // local au moment de l'écriture), pas un timestamp précis — sert au calcul
+  // paresseux de rupture de streak à la lecture.
+  lastCompletedOn DateTime?
+
+  completions HabitCompletion[]
+  xpEvents    XpEvent[]
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// Une ligne = un jour validé pour une habitude donnée. Append-only, jamais
+// modifiée ni supprimée — c'est le journal de vérité du streak, au même
+// titre que XpEvent pour l'XP. completedOn est un jour calendaire normalisé
+// (00:00 local), pas un timestamp : l'unique ci-dessous empêche physiquement
+// deux validations le même jour pour la même habitude.
+model HabitCompletion {
+  id          String   @id @default(uuid())
+  completedOn DateTime
+
+  habitId String
+  habit   Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, completedOn])
+  @@index([habitId, completedOn])
+}
+
 // Livre de comptes de l'XP : source de vérité unique, append-only.
 // Le solde User.xp/level est un cache de lecture maintenu en transaction.
 // Sert aussi de log des actions critiques (exigence du CDC) et alimente
@@ -126,15 +182,21 @@ model XpEvent {
   amount Int // positif pour GAIN, négatif pour REFUND
 
   // Priorité au moment de la complétion, figée : changer la priorité
-  // d'une tâche complétée ne réécrit pas l'historique
+  // d'une tâche ou d'une habitude complétée ne réécrit pas l'historique
   priority Priority
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // SetNull : supprimer une tâche ne falsifie pas le livre de comptes
+  // SetNull : supprimer une tâche ne falsifie pas le livre de comptes.
+  // Un événement vient d'une tâche OU d'une habitude, jamais des deux —
+  // règle disciplinée au niveau du service (pas de CHECK constraint SQL,
+  // documenté ici plutôt qu'imposé en base).
   taskId String?
   task   Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  habitId String?
+  habit   Habit?  @relation(fields: [habitId], references: [id], onDelete: SetNull)
 
   // Un REFUND pointe le GAIN qu'il annule ; @unique garantit en base
   // qu'un même gain ne peut pas être remboursé deux fois
@@ -151,4 +213,7 @@ model XpEvent {
   // taskId : sans index, scan séquentiel. La clé étrangère n'est pas
   // indexée d'office par Postgres/Prisma.
   @@index([taskId])
+
+  // Même rationale que taskId, pour les futurs remboursements d'habitudes
+  @@index([habitId])
 }
