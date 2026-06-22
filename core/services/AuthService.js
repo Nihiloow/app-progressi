@@ -1,11 +1,14 @@
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
-import { EmailAlreadyUsedError } from "../errors/domainErrors";
+import {
+    EmailAlreadyUsedError,
+    InvalidCredentialsError,
+} from "../errors/domainErrors";
 
-// Orchestrateur métier de l'authentification. Pour l'instant une seule
-// méthode (register) : la connexion elle-même est déléguée au provider
-// NextAuth (lib/auth.js), qui porte sa propre logique d'authorize() et n'a
-// pas besoin de passer par ce service.
+// Orchestrateur métier de l'authentification. register() inscrit un nouveau
+// compte ; changePassword() modifie le mot de passe d'un compte déjà
+// authentifié. La connexion elle-même reste déléguée au provider NextAuth
+// (lib/auth.js), qui porte sa propre logique d'authorize().
 export class AuthService {
     #db;
 
@@ -30,6 +33,34 @@ export class AuthService {
 
         await this.#db.user.create({
             data: { email, pseudo, password: hashedPassword },
+        });
+    }
+
+    // Change le mot de passe d'un compte déjà authentifié. Exige et
+    // vérifie le mot de passe ACTUEL avant d'accepter le nouveau — non
+    // négociable : sans cette vérification, une session laissée ouverte
+    // (poste partagé, appareil volé) permettrait à n'importe qui de
+    // verrouiller le vrai propriétaire hors de son compte. C'est une
+    // garde de sécurité, pas un choix de confort UX.
+    async changePassword(userId, { currentPassword, newPassword }) {
+        const user = await this.#db.user.findUnique({
+            where: { id: userId },
+        });
+
+        const passwordMatch = await bcrypt.compare(
+            currentPassword,
+            user.password,
+        );
+
+        if (!passwordMatch) {
+            throw new InvalidCredentialsError();
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await this.#db.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword },
         });
     }
 

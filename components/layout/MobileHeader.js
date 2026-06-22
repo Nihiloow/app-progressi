@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@/hooks/useUser";
+import { ProfileMenu } from "@/components/profile/ProfileMenu";
 
 export default function MobileHeader() {
     const { data: user, isLoading } = useUser();
@@ -20,12 +21,11 @@ export default function MobileHeader() {
                 Tasks du jour
             </h1>
 
-            <button
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600 transition-transform hover:scale-105 active:scale-95 dark:bg-indigo-500/20 dark:text-indigo-400"
-                aria-label="Ouvrir le menu profil"
-            >
-                {user?.pseudo ? user.pseudo.charAt(0).toUpperCase() : "T"}
-            </button>
+            <ProfileMenu align="right">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600 transition-transform hover:scale-105 active:scale-95 dark:bg-indigo-500/20 dark:text-indigo-400">
+                    {user?.pseudo ? user.pseudo.charAt(0).toUpperCase() : "T"}
+                </span>
+            </ProfileMenu>
         </header>
     );
 }

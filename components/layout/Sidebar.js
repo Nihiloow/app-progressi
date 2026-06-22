@@ -1,6 +1,7 @@
 "use client";
 
 import AvatarProgress from "@/components/AvatarProgress";
+import { ProfileMenu } from "@/components/profile/ProfileMenu";
 import { useUser } from "@/hooks/useUser";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,8 +44,10 @@ export default function Sidebar() {
 
     return (
         <aside className="hidden h-full w-64 flex-col border-r border-slate-200 bg-slate-50 p-6 md:flex dark:border-zinc-800 dark:bg-[#18181b]">
-            <div className="mb-8">
-                <AvatarProgress user={user} />
+            <div className="mb-8 flex justify-center">
+                <ProfileMenu align="left">
+                    <AvatarProgress user={user} />
+                </ProfileMenu>
             </div>
 
             <nav className="flex flex-col gap-2">
@@ -55,7 +58,6 @@ export default function Sidebar() {
                     href="/dashboard/habits"
                     className={linkClass("/dashboard/habits")}
                 >
-                    <FlameIcon className="h-4 w-4" />
                     Habitudes
                 </Link>
                 <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">

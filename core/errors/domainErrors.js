@@ -98,3 +98,16 @@ export class HabitAlreadyCompletedError extends DomainError {
         super("Cette habitude a déjà été validée aujourd'hui.", 409);
     }
 }
+
+export class InvalidCredentialsError extends DomainError {
+    constructor() {
+        // 401, pas 400 : la session est valide (l'identité est connue),
+        // mais la preuve fournie pour une action sensible (le mot de passe
+        // actuel, pour en changer) est incorrecte — c'est un échec
+        // d'authentification au même titre qu'un login raté, pas une
+        // erreur de forme. Message volontairement générique, identique en
+        // cas de mot de passe incorrect comme en cas d'autre souci : ne
+        // jamais donner d'indice supplémentaire sur ce qui a échoué.
+        super("Mot de passe actuel incorrect.", 401);
+    }
+}
