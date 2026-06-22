@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { tagService } from "@/core/services/TagService";
+import { moderationService } from "@/core/services/ModerationService";
 import { addExperience, removeExperience } from "../engine/progression";
 import { getXpReward, getDailyLimit } from "../config/gamification";
 import {
@@ -137,6 +138,13 @@ export class TaskService {
                         taskId,
                     },
                 });
+
+                // Détection anti-triche : compte les GAIN récents sur cette
+                // tâche, journalise un ModerationFlag si le seuil est
+                // dépassé. N'empêche jamais la complétion elle-même — c'est
+                // de la visibilité pour l'admin, pas un blocage (le rate-
+                // limit actif se trouve dans la route, en amont du service).
+                await moderationService.checkRapidCycle(tx, userId, taskId);
             }
 
             await tx.user.update({

@@ -60,23 +60,34 @@ enum HabitFrequency {
   WEEKLY
 }
 
+// Type de comportement suspect détecté. Un seul type implémenté en v1
+// (RAPID_CYCLE) : volontairement restreint à ce qui a un sens de triche
+// réel ici — un cycle complet validation→décochage ne rapporte jamais
+// plus d'XP net (le refund est exact), répéter ce cycle n'a donc aucun
+// intérêt légitime. L'enum laisse la porte ouverte à d'autres types futurs
+// sans migration de schéma à chaque ajout.
+enum ModerationFlagType {
+  RAPID_CYCLE
+}
+
 // ─── Modèles ─────────────────────────────────────────────────────────────────
 
 model User {
-  id        String        @id @default(uuid())
-  email     String        @unique
-  password  String
-  pseudo    String
-  role      Role          @default(USER)
-  status    AccountStatus @default(ACTIVE)
-  xp        Int           @default(0)
-  level     Int           @default(1)
-  tasks     Task[]
-  tags      Tag[]
-  habits    Habit[]
-  xpEvents  XpEvent[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id              String           @id @default(uuid())
+  email           String           @unique
+  password        String
+  pseudo          String
+  role            Role             @default(USER)
+  status          AccountStatus    @default(ACTIVE)
+  xp              Int              @default(0)
+  level           Int              @default(1)
+  tasks           Task[]
+  tags            Tag[]
+  habits          Habit[]
+  xpEvents        XpEvent[]
+  moderationFlags ModerationFlag[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model Task {
@@ -92,8 +103,9 @@ model Task {
   priority Priority @default(NONE)
   taskType TaskType @default(NONE)
 
-  tags     Tag[]
-  xpEvents XpEvent[]
+  tags            Tag[]
+  xpEvents        XpEvent[]
+  moderationFlags ModerationFlag[]
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -216,4 +228,36 @@ model XpEvent {
 
   // Même rationale que taskId, pour les futurs remboursements d'habitudes
   @@index([habitId])
+}
+
+// Journal d'événements suspects, distinct du XpEvent (qui reste un livre
+// de comptes financier, pas un journal de modération). Append-only,
+// jamais modifié — un flag existe ou n'existe pas, on ne le "résout" pas
+// en le supprimant : la trace doit survivre pour l'audit, même si l'admin
+// décide de ne rien faire derrière. AUCUNE sanction automatique n'est
+// déclenchée par la création d'un flag : c'est une donnée de visibilité
+// pour l'admin, qui garde la décision humaine (cohérent avec setStatus/
+// resetProgression qui sont des actions admin explicites, jamais auto).
+model ModerationFlag {
+  id     String             @id @default(uuid())
+  type   ModerationFlagType
+  // Compte rendu lisible côté admin sans avoir à recalculer le contexte
+  // depuis le ledger — ex: "4 cycles validation/décochage en 6 minutes".
+  detail String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Nullable : un flag concerne presque toujours une tâche précise, mais
+  // SetNull plutôt que Cascade — supprimer la tâche ne doit pas effacer
+  // la trace que l'admin a pu consulter avant suppression.
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  // Le dashboard admin liste par défaut les flags les plus récents,
+  // et filtre potentiellement par utilisateur.
+  @@index([createdAt])
+  @@index([userId])
 }
