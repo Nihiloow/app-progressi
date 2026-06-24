@@ -21,7 +21,12 @@ export default function MobileHeader() {
                 Tasks du jour
             </h1>
 
-            <ProfileMenu align="right">
+            {/* variant="header" : l'avatar est en haut à DROITE de l'écran
+                ici, contrairement à la Sidebar (en haut à gauche) — le
+                popover s'aligne donc sur le bord droit du déclencheur au
+                lieu de déborder vers la droite façon TickTick, pour ne
+                jamais sortir du viewport mobile. */}
+            <ProfileMenu variant="header">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600 transition-transform hover:scale-105 active:scale-95 dark:bg-indigo-500/20 dark:text-indigo-400">
                     {user?.pseudo ? user.pseudo.charAt(0).toUpperCase() : "T"}
                 </span>

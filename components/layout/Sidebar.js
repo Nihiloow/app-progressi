@@ -1,6 +1,6 @@
 "use client";
 
-import AvatarProgress from "@/components/AvatarProgress";
+import { AvatarRing } from "@/components/AvatarProgress";
 import { ProfileMenu } from "@/components/profile/ProfileMenu";
 import { useUser } from "@/hooks/useUser";
 import Link from "next/link";
@@ -44,13 +44,22 @@ export default function Sidebar() {
 
     return (
         <aside className="hidden h-full w-64 flex-col border-r border-slate-200 bg-slate-50 p-6 md:flex dark:border-zinc-800 dark:bg-[#18181b]">
-            <div className="mb-8 flex justify-center">
-                <ProfileMenu align="left">
-                    <AvatarProgress user={user} />
+            {/* Seul AvatarRing (le cercle) est le déclencheur du menu —
+                façon TickTick, où le pseudo affiché dessous n'ouvre rien.
+                AvatarProgress (le composant complet, cercle + pseudo) reste
+                disponible tel quel pour d'autres usages (ex: page Profil)
+                — ici on compose à la main pour garder la zone cliquable
+                restreinte au cercle. */}
+            <div className="mb-2 flex flex-col items-center">
+                <ProfileMenu variant="sidebar">
+                    <AvatarRing user={user} />
                 </ProfileMenu>
+                <span className="mt-5 font-semibold text-slate-700 dark:text-slate-200">
+                    {user.pseudo}
+                </span>
             </div>
 
-            <nav className="flex flex-col gap-2">
+            <nav className="mt-6 flex flex-col gap-2">
                 <Link href="/dashboard" className={linkClass("/dashboard")}>
                     Tasks
                 </Link>
@@ -58,6 +67,7 @@ export default function Sidebar() {
                     href="/dashboard/habits"
                     className={linkClass("/dashboard/habits")}
                 >
+                    <FlameIcon className="h-4 w-4" />
                     Habitudes
                 </Link>
                 <button className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800/50">

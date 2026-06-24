@@ -13,9 +13,10 @@ import {
 import { resolveTagColor } from "@/core/config/tagColors";
 import { CalendarIcon, CheckIcon, CloseIcon } from "@/components/ui/icons";
 import { TaskContextMenu } from "@/components/task/TaskContextMenu";
+import { TaskActionDrawer } from "@/components/task/TaskActionDrawer";
 import { EditableTaskTitle } from "@/components/task/EditableTaskTitle";
 
-// Durée du longpress mobile avant ouverture du menu contextuel (ms)
+// Durée du longpress mobile avant ouverture du tiroir d'action (ms)
 const LONGPRESS_DELAY = 500;
 
 export default function TaskItem({ task, isSelected, onSelect }) {
@@ -24,7 +25,17 @@ export default function TaskItem({ task, isSelected, onSelect }) {
     const deleteTaskMutation = useDeleteTask();
     const isPending = changeStatusMutation.isPending;
 
+    // Deux surfaces d'action distinctes selon le type d'interaction :
+    //   - contextMenu { x, y } : clic droit SOURIS (desktop), menu flottant
+    //     positionné au curseur.
+    //   - isDrawerOpen : longpress TACTILE (mobile), tiroir bas pleine
+    //     largeur — ne déborde jamais de l'écran, contrairement au menu
+    //     flottant qui sortait du cadre près des bords.
+    // Le choix se fait sur le type d'interaction, pas sur la taille
+    // d'écran (window.innerWidth) : plus robuste sur les appareils hybrides
+    // tactile + souris, où une détection par largeur se tromperait.
     const [contextMenu, setContextMenu] = useState(null); // { x, y } | null
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const longPressTimer = useRef(null);
     const cardRef = useRef(null);
 
@@ -46,18 +57,18 @@ export default function TaskItem({ task, isSelected, onSelect }) {
         setContextMenu(null);
     }, []);
 
-    // Clic droit desktop
+    // Clic droit desktop → menu contextuel flottant au curseur
     const handleContextMenu = (e) => {
         e.preventDefault();
         openContextMenu(e.clientX, e.clientY);
     };
 
-    // Longpress mobile : on démarre le timer au touchstart et on l'annule
-    // si le doigt bouge ou se lève avant LONGPRESS_DELAY.
-    const handleTouchStart = (e) => {
-        const touch = e.touches[0];
+    // Longpress mobile → tiroir d'action (PAS le menu flottant). On démarre
+    // le timer au touchstart et on l'annule si le doigt bouge ou se lève
+    // avant LONGPRESS_DELAY.
+    const handleTouchStart = () => {
         longPressTimer.current = setTimeout(() => {
-            openContextMenu(touch.clientX, touch.clientY);
+            setIsDrawerOpen(true);
         }, LONGPRESS_DELAY);
     };
 
@@ -77,11 +88,10 @@ export default function TaskItem({ task, isSelected, onSelect }) {
         changeStatusMutation.mutate({ taskId: task.id, status });
     };
 
-    // Carte sélectionnable au clavier : Entrée/Espace ouvrent les détails,
-    // au même titre qu'un clic. La touche "Menu" (ou Shift+F10, équivalent
-    // clavier standard du clic droit) ouvre le menu contextuel, centré sur
-    // la carte plutôt qu'à la position du curseur (qui n'a pas de sens au
-    // clavier).
+    // Carte sélectionnable au clavier : Entrée/Espace ouvrent les détails.
+    // La touche "Menu" (ou Shift+F10, équivalent clavier du clic droit)
+    // ouvre le menu contextuel, centré sur la carte plutôt qu'à la position
+    // du curseur (qui n'a pas de sens au clavier).
     const handleCardKeyDown = (e) => {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -104,7 +114,7 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                 aria-pressed={isSelected}
                 aria-label={`Quête : ${task.title}. ${
                     isDone ? "Validée" : isAbandoned ? "Abandonnée" : "En cours"
-                }. Appuyez sur Entrée pour voir les détails, sur le menu contextuel pour les options.`}
+                }. Appuyez sur Entrée pour voir les détails, restez appuyé pour les options.`}
                 onClick={() => onSelect(task.id)}
                 onKeyDown={handleCardKeyDown}
                 onContextMenu={handleContextMenu}
@@ -181,11 +191,26 @@ export default function TaskItem({ task, isSelected, onSelect }) {
                 </div>
             </div>
 
+            {/* Desktop : menu contextuel flottant au curseur (clic droit) */}
             {contextMenu && (
                 <TaskContextMenu
                     task={task}
                     position={contextMenu}
                     onClose={closeContextMenu}
+                    onUpdateTask={handleUpdate}
+                    onToggleStatus={handleStatusFromMenu}
+                    onDeleteTask={() => deleteTaskMutation.mutate(task.id)}
+                />
+            )}
+
+            {/* Mobile : tiroir bas (longpress). Rendu uniquement à
+                l'ouverture pour ne pas multiplier les popovers TagPanel
+                montés dans le DOM tant qu'aucune carte n'est en édition. */}
+            {isDrawerOpen && (
+                <TaskActionDrawer
+                    task={task}
+                    isOpen={isDrawerOpen}
+                    onClose={() => setIsDrawerOpen(false)}
                     onUpdateTask={handleUpdate}
                     onToggleStatus={handleStatusFromMenu}
                     onDeleteTask={() => deleteTaskMutation.mutate(task.id)}

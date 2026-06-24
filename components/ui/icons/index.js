@@ -17,3 +17,5 @@ export * from "./SettingsIcon";
 export * from "./BanIcon";
 export * from "./SpinnerIcon";
 export * from "./FlameIcon";
+export * from "./UserIcon";
+export * from "./LogoutIcon";

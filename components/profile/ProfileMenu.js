@@ -2,19 +2,21 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { UserIcon } from "@/components/ui/icons/UserIcon";
-import { SettingsIcon } from "@/components/ui/icons";
+import { SettingsIcon, LogoutIcon } from "@/components/ui/icons";
 
-// Menu déroulant générique du profil, sur le même pattern que OptionMenu
-// (position absolute, fermeture Échap/clic extérieur) — mais conçu comme
-// un WRAPPER autour d'un déclencheur arbitraire (children), plutôt qu'un
-// bouton standardisé : il doit envelopper indifféremment l'avatar du
-// MobileHeader (petit cercle) et AvatarProgress dans la Sidebar (anneau XP
-// + pseudo), deux rendus visuellement différents pour la même action.
+// Menu déroulant du profil, sur le même pattern que OptionMenu (position
+// absolute, fermeture Échap/clic extérieur) — conçu comme un WRAPPER
+// autour d'un déclencheur arbitraire (children), pour envelopper
+// indifféremment le petit avatar du MobileHeader et l'AvatarRing de la
+// Sidebar.
 //
-// Le composant NE MODIFIE PAS le déclencheur qu'on lui passe : AvatarProgress
-// reste un composant de présentation pur, intouché, simplement enveloppé.
-export function ProfileMenu({ children, align = "right" }) {
+// Positionnement façon TickTick : le popover ne s'aligne PAS sur le bord
+// du déclencheur, il est DÉCALÉ vers la droite (offset positif) et
+// remonte légèrement pour chevaucher le bas de l'avatar plutôt que de
+// descendre franchement dessous — cf. capture de référence fournie.
+export function ProfileMenu({ children, variant = "sidebar" }) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
 
@@ -39,10 +41,25 @@ export function ProfileMenu({ children, align = "right" }) {
         };
     }, [isOpen]);
 
-    const alignment = align === "right" ? "right-0" : "left-0";
+    const handleSignOut = () => {
+        setIsOpen(false);
+        signOut({ callbackUrl: "/login" });
+    };
+
+    // Deux variantes de positionnement, deux contextes différents :
+    //   - "sidebar" : avatar en haut à gauche de l'écran, le popover peut
+    //     se permettre de déborder vers la droite (façon TickTick, cf.
+    //     capture de référence) sans jamais sortir du viewport.
+    //   - "header" : avatar en haut à DROITE de l'écran (MobileHeader) —
+    //     décaler vers la droite pousserait le menu hors écran. Alignement
+    //     classique sur le bord droit du déclencheur, ouverture vers le bas.
+    const positionClass =
+        variant === "sidebar"
+            ? "absolute -top-4 left-16 w-52"
+            : "absolute right-0 top-full mt-2 w-52";
 
     return (
-        <div ref={containerRef} className="relative">
+        <div ref={containerRef} className="relative inline-block">
             <button
                 type="button"
                 onClick={() => setIsOpen((v) => !v)}
@@ -58,7 +75,7 @@ export function ProfileMenu({ children, align = "right" }) {
                 <div
                     role="menu"
                     aria-label="Menu profil"
-                    className={`absolute top-full mt-2 ${alignment} z-[90] w-48 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700`}
+                    className={`z-[90] overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200 animate-in fade-in dark:bg-zinc-800 dark:ring-zinc-700 ${positionClass}`}
                 >
                     <div className="flex flex-col py-1">
                         <Link
@@ -83,6 +100,18 @@ export function ProfileMenu({ children, align = "right" }) {
                                 Paramètres
                             </span>
                         </Link>
+
+                        <div className="my-1 border-t border-slate-100 dark:border-zinc-700" />
+
+                        <button
+                            type="button"
+                            role="menuitem"
+                            onClick={handleSignOut}
+                            className="flex items-center gap-3 px-4 py-3 text-left text-sm font-medium text-red-500 outline-none hover:bg-red-50 focus-visible:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:focus-visible:bg-red-500/10"
+                        >
+                            <LogoutIcon className="h-4 w-4" />
+                            Se déconnecter
+                        </button>
                     </div>
                 </div>
             )}

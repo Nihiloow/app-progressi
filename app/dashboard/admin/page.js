@@ -9,27 +9,24 @@ import {
     Tooltip,
     CartesianGrid,
 } from "recharts";
-import { useProfile } from "@/hooks/useProfile";
-import { useUser } from "@/hooks/useUser";
-import AvatarProgress from "@/components/AvatarProgress";
-import { FlameIcon } from "@/components/ui/icons";
+import { useAdminStats } from "@/hooks/useAdminStats";
+import { StatCard } from "@/components/admin/StatCard";
 
-const PRIORITY_LABELS = {
-    HIGH: "Surcharge",
-    MEDIUM: "Soutenu",
-    LOW: "Calme",
-    NONE: "Énergie",
-};
+export default function AdminDashboardPage() {
+    const { data: stats, isLoading, error } = useAdminStats();
 
-export default function ProfilePage() {
-    const { data: user } = useUser();
-    const { data: profile, isLoading, error } = useProfile();
-
-    if (isLoading || !user) {
+    if (isLoading) {
         return (
             <main className="flex-1 overflow-y-auto p-6">
-                <div className="mb-6 h-8 w-48 animate-pulse rounded bg-slate-200 dark:bg-zinc-800" />
-                <div className="h-64 w-full animate-pulse rounded-xl bg-slate-100 dark:bg-zinc-800/50" />
+                <div className="mb-6 h-8 w-56 animate-pulse rounded bg-slate-200 dark:bg-zinc-800" />
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <div
+                            key={i}
+                            className="h-24 animate-pulse rounded-xl bg-slate-100 dark:bg-zinc-800/50"
+                        />
+                    ))}
+                </div>
             </main>
         );
     }
@@ -44,52 +41,36 @@ export default function ProfilePage() {
         );
     }
 
-    const { xpTimeline, productivityStats, bestStreaks } = profile;
-
     return (
         <main className="flex-1 overflow-y-auto p-6">
             <h1 className="mb-6 text-2xl font-bold text-slate-800 dark:text-slate-100">
-                Profil
+                Tableau de bord
             </h1>
 
-            <section className="mb-8 flex justify-center">
-                <AvatarProgress user={user} />
+            <section className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                <StatCard label="Utilisateurs" value={stats.totalUsers} />
+                <StatCard label="Actifs" value={stats.activeUsers} />
+                <StatCard label="Désactivés" value={stats.disabledUsers} />
+                <StatCard label="Niveau moyen" value={stats.averageLevel} />
+                <StatCard
+                    label="Quêtes accomplies"
+                    value={stats.completedTasks}
+                />
+                <StatCard label="XP distribué" value={stats.distributedXp} />
             </section>
 
-            <section className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                    <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
-                        Quêtes accomplies
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
-                        {productivityStats.completedTasks}
-                    </p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                    <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
-                        Taux de complétion
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
-                        {productivityStats.completionRate}%
-                    </p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                    <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
-                        Quêtes créées
-                    </p>
-                    <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
-                        {productivityStats.totalTasks}
-                    </p>
-                </div>
-            </section>
-
-            <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
                 <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-zinc-300">
-                    XP gagné — 30 derniers jours
+                    XP distribué — 30 derniers jours
                 </h2>
                 <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={xpTimeline}>
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                        minWidth={0}
+                        minHeight={0}
+                    >
+                        <LineChart data={stats.xpTimeline}>
                             <CartesianGrid
                                 strokeDasharray="3 3"
                                 stroke="currentColor"
@@ -126,58 +107,28 @@ export default function ProfilePage() {
                 </div>
             </section>
 
-            {productivityStats.priorityBreakdown.length > 0 && (
-                <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            {stats.topTasks.length > 0 && (
+                <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
                     <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-zinc-300">
-                        Répartition des quêtes accomplies par priorité
+                        Quêtes les plus fréquentes
                     </h2>
                     <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
-                        {productivityStats.priorityBreakdown.map((row) => (
+                        {stats.topTasks.map((task) => (
                             <li
-                                key={row.priority}
+                                key={task.title}
                                 className="flex justify-between py-2 text-sm"
                             >
                                 <span className="text-slate-700 dark:text-zinc-300">
-                                    {PRIORITY_LABELS[row.priority] ??
-                                        row.priority}
+                                    {task.title}
                                 </span>
                                 <span className="font-semibold text-slate-900 dark:text-slate-100">
-                                    {row.count}
+                                    {task.count}
                                 </span>
                             </li>
                         ))}
                     </ul>
                 </section>
             )}
-
-            <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-zinc-300">
-                    Meilleures séries
-                </h2>
-                {bestStreaks.length === 0 ? (
-                    <p className="text-sm text-slate-400 dark:text-zinc-500">
-                        Aucune habitude pour l&apos;instant.
-                    </p>
-                ) : (
-                    <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
-                        {bestStreaks.map((habit) => (
-                            <li
-                                key={habit.id}
-                                className="flex items-center justify-between py-2 text-sm"
-                            >
-                                <span className="text-slate-700 dark:text-zinc-300">
-                                    {habit.title}
-                                </span>
-                                <span className="flex items-center gap-1.5 font-semibold text-amber-600 dark:text-amber-400">
-                                    <FlameIcon className="h-4 w-4" />
-                                    {habit.bestStreak} jour
-                                    {habit.bestStreak > 1 ? "s" : ""}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </section>
         </main>
     );
 }
