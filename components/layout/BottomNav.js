@@ -1,28 +1,40 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
-import {
-    ListIcon,
-    FlameIcon,
-    FocusIcon,
-    DashboardIcon,
-} from "@/components/ui/icons";
+import { ListIcon, FlameIcon, UserIcon } from "@/components/ui/icons";
+import { ProfileNavDrawer } from "@/components/layout/ProfileNavDrawer";
 
-// Nav mobile basse. Les icônes viennent du barrel (règle d'or : zéro
-// émoji dans l'UI). L'actif est calculé par usePathname, comme la Sidebar.
-// L'entrée admin n'apparaît que pour les comptes ADMIN.
+// Nav mobile basse. 4 slots de largeur fixe identique, que le compte soit
+// admin ou non — alignement visuel garanti dans les deux cas :
+//   Tâches | Habitudes | Profil (3ème slot, lien direct non-admin /
+//   toujours vide pour un admin) | 4ème slot (vide non-admin / tiroir
+//   Profil+Admin pour un admin)
 //
-// Le bouton "Agenda" (mort, aucune route derrière) est remplacé par
-// "Habitudes" : Focus reste intact, volontairement, au cas où Nathan a
-// déjà une idée de fonctionnalité pour ce slot.
+// Remplace l'ancien bouton "Focus" (mort, aucune route derrière) et la
+// réserve FAB centrale, tous deux supprimés : on ne réserve pas d'avance
+// un slot pour une feature (Pomodoro) qui n'est pas encore cadrée — YAGNI.
+// Si Pomodoro revient, la question de la barre sera rouverte à ce moment,
+// en connaissance des besoins réels de la feature.
 export default function BottomNav() {
     const pathname = usePathname();
     const { data: user } = useUser();
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+    const isAdmin = user?.role === "ADMIN";
 
     const itemClass = (href) =>
         pathname === href
+            ? "flex flex-col items-center justify-center gap-1 text-indigo-500 transition-transform active:scale-95 dark:text-indigo-400"
+            : "flex flex-col items-center justify-center gap-1 text-slate-400 transition-transform hover:text-slate-600 active:scale-95 dark:text-zinc-500 dark:hover:text-zinc-300";
+
+    // Le 4ème slot (admin) doit apparaître "actif" si on est déjà sur
+    // Profil OU Admin : les deux routes vivent derrière ce même bouton,
+    // contrairement aux autres slots qui pointent vers une seule route.
+    const drawerSlotClass =
+        pathname === "/dashboard/profile" || pathname === "/dashboard/admin"
             ? "flex flex-col items-center justify-center gap-1 text-indigo-500 transition-transform active:scale-95 dark:text-indigo-400"
             : "flex flex-col items-center justify-center gap-1 text-slate-400 transition-transform hover:text-slate-600 active:scale-95 dark:text-zinc-500 dark:hover:text-zinc-300";
 
@@ -42,27 +54,45 @@ export default function BottomNav() {
                     <span className="text-[10px] font-medium">Habitudes</span>
                 </Link>
 
-                {/* Espace central : réserve pour le futur bouton + flottant */}
-                <div className="w-12"></div>
-
-                <button className="flex flex-col items-center justify-center gap-1 text-slate-400 transition-transform hover:text-slate-600 active:scale-95 dark:text-zinc-500 dark:hover:text-zinc-300">
-                    <FocusIcon className="h-6 w-6" />
-                    <span className="text-[10px] font-medium">Focus</span>
-                </button>
-
-                {/* Entrée admin : visible uniquement pour les comptes ADMIN */}
-                {user?.role === "ADMIN" ? (
-                    <Link
-                        href="/dashboard/admin"
-                        className={itemClass("/dashboard/admin")}
-                    >
-                        <DashboardIcon className="h-6 w-6" />
-                        <span className="text-[10px] font-medium">Admin</span>
-                    </Link>
+                {/* 3ème slot : lien direct Profil pour un non-admin, vide
+                    (largeur fixe) pour un admin — qui accède à Profil via
+                    le tiroir du 4ème slot. */}
+                {isAdmin ? (
+                    <div className="w-12" />
                 ) : (
-                    <div className="w-12"></div>
+                    <Link
+                        href="/dashboard/profile"
+                        className={itemClass("/dashboard/profile")}
+                    >
+                        <UserIcon className="h-6 w-6" />
+                        <span className="text-[10px] font-medium">Profil</span>
+                    </Link>
+                )}
+
+                {/* 4ème slot : vide (largeur fixe) pour un non-admin, tiroir
+                    Profil/Admin pour un admin. */}
+                {isAdmin ? (
+                    <button
+                        type="button"
+                        onClick={() => setIsDrawerOpen(true)}
+                        aria-haspopup="true"
+                        aria-expanded={isDrawerOpen}
+                        className={drawerSlotClass}
+                    >
+                        <UserIcon className="h-6 w-6" />
+                        <span className="text-[10px] font-medium">Profil</span>
+                    </button>
+                ) : (
+                    <div className="w-12" />
                 )}
             </div>
+
+            {isAdmin && (
+                <ProfileNavDrawer
+                    isOpen={isDrawerOpen}
+                    onClose={() => setIsDrawerOpen(false)}
+                />
+            )}
         </nav>
     );
 }

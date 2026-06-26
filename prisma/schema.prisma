@@ -70,17 +70,24 @@ enum ModerationFlagType {
   RAPID_CYCLE
 }
 
+// Phase d'une session Pomodoro : alterne travail et pause, chacune
+// skippable. Seule la phase WORK rapporte de l'XP (cf. PomodoroSession).
+enum PomodoroPhase {
+  WORK
+  BREAK
+}
+
 // ─── Modèles ─────────────────────────────────────────────────────────────────
 
 model User {
-  id              String           @id @default(uuid())
-  email           String           @unique
+  id              String            @id @default(uuid())
+  email           String            @unique
   password        String
   pseudo          String
-  role            Role             @default(USER)
-  status          AccountStatus    @default(ACTIVE)
-  xp              Int              @default(0)
-  level           Int              @default(1)
+  role            Role              @default(USER)
+  status          AccountStatus     @default(ACTIVE)
+  xp              Int               @default(0)
+  level           Int               @default(1)
   // Nullable : aucun avatar par défaut, l'initiale du pseudo reste le repli
   // côté front (cf. AvatarRing). Stocke l'URL publique Supabase Storage
   // complète (avec query de cache-busting), pas un chemin relatif — évite
@@ -91,8 +98,9 @@ model User {
   habits          Habit[]
   xpEvents        XpEvent[]
   moderationFlags ModerationFlag[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  pomodoroSessions PomodoroSession[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
 model Task {
@@ -108,9 +116,10 @@ model Task {
   priority Priority @default(NONE)
   taskType TaskType @default(NONE)
 
-  tags            Tag[]
-  xpEvents        XpEvent[]
-  moderationFlags ModerationFlag[]
+  tags             Tag[]
+  xpEvents         XpEvent[]
+  moderationFlags  ModerationFlag[]
+  pomodoroSessions PomodoroSession[]
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -199,21 +208,27 @@ model XpEvent {
   amount Int // positif pour GAIN, négatif pour REFUND
 
   // Priorité au moment de la complétion, figée : changer la priorité
-  // d'une tâche ou d'une habitude complétée ne réécrit pas l'historique
+  // d'une tâche ou d'une habitude complétée ne réécrit pas l'historique.
+  // Pour un Pomodoro sans tâche liée, vaut NONE (valeur neutre déjà
+  // utilisée comme défaut sur Task.priority/Habit.priority).
   priority Priority
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // SetNull : supprimer une tâche ne falsifie pas le livre de comptes.
-  // Un événement vient d'une tâche OU d'une habitude, jamais des deux —
-  // règle disciplinée au niveau du service (pas de CHECK constraint SQL,
-  // documenté ici plutôt qu'imposé en base).
+  // Un événement vient d'une tâche, d'une habitude OU d'une session
+  // Pomodoro, jamais de deux à la fois — règle disciplinée au niveau
+  // du service (pas de CHECK constraint SQL), documentée ici plutôt
+  // qu'imposée en base.
   taskId String?
   task   Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
   habitId String?
   habit   Habit?  @relation(fields: [habitId], references: [id], onDelete: SetNull)
+
+  pomodoroSessionId String?
+  pomodoroSession   PomodoroSession? @relation(fields: [pomodoroSessionId], references: [id], onDelete: SetNull)
 
   // Un REFUND pointe le GAIN qu'il annule ; @unique garantit en base
   // qu'un même gain ne peut pas être remboursé deux fois
@@ -233,6 +248,9 @@ model XpEvent {
 
   // Même rationale que taskId, pour les futurs remboursements d'habitudes
   @@index([habitId])
+
+  // Même rationale, pour les sessions Pomodoro
+  @@index([pomodoroSessionId])
 }
 
 // Journal d'événements suspects, distinct du XpEvent (qui reste un livre
@@ -265,4 +283,49 @@ model ModerationFlag {
   // et filtre potentiellement par utilisateur.
   @@index([createdAt])
   @@index([userId])
+}
+
+// Une ligne = une session Pomodoro TERMINÉE (fin naturelle ou arrêt
+// manuel) — le minuteur en cours est un state client volatile, jamais
+// persisté tant qu'il tourne (pas de reprise après refresh, choix acté).
+// actualWorkSeconds est le temps RÉEL en phase WORK, seul compte pour
+// xpFromTime — la phase BREAK ne rapporte jamais d'XP. xpFromTime et
+// xpFromTask sont stockés séparément (pas fusionnés) pour permettre
+// l'affichage détaillé façon TickTick dans l'historique.
+model PomodoroSession {
+  id             String  @id @default(uuid())
+
+  workMinutes    Int     // durée PRÉVUE de la phase WORK, personnalisable
+  breakMinutes   Int     // durée PRÉVUE de la phase BREAK, personnalisable
+  autoChainBreak Boolean @default(false)
+
+  // Temps RÉEL effectué en phase WORK, peut être < workMinutes*60 si la
+  // session a été arrêtée avant la fin (XP partiel, cf. règle métier)
+  actualWorkSeconds Int
+
+  // Figés à la complétion, jamais recalculés (append-only, même
+  // discipline que XpEvent)
+  xpFromTime Int @default(0)
+  xpFromTask Int @default(0)
+
+  startedAt DateTime
+  endedAt   DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Tâche active AU MOMENT DE LA FIN de la session, nullable — l'utilisateur
+  // peut changer de tâche en cours de séance (une seule active à la fois),
+  // seule celle en place à la fin compte pour xpFromTask. SetNull : même
+  // politique que XpEvent.taskId, supprimer la tâche ne falsifie pas
+  // l'historique Pomodoro.
+  taskId String?
+  task   Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  xpEvents XpEvent[]
+
+  createdAt DateTime @default(now())
+
+  // L'historique façon TickTick liste par utilisateur, trié par date
+  @@index([userId, createdAt])
 }
