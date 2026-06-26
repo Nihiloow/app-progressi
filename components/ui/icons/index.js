@@ -19,3 +19,4 @@ export * from "./SpinnerIcon";
 export * from "./FlameIcon";
 export * from "./UserIcon";
 export * from "./LogoutIcon";
+export * from "./CameraIcon";

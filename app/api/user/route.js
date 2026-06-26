@@ -13,7 +13,13 @@ export async function GET() {
         // primaire, et l'id est désormais garanti dans le token
         const user = await prisma.user.findUnique({
             where: { id: sessionUser.id },
-            select: { pseudo: true, xp: true, level: true, role: true },
+            select: {
+                pseudo: true,
+                xp: true,
+                level: true,
+                role: true,
+                avatarUrl: true,
+            },
         });
 
         if (!user) {

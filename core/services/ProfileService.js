@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { supabaseAdmin } from "@/lib/supabase";
+import { extensionFromMimeType } from "@/core/validation/avatarSchema";
+
+const AVATAR_BUCKET = "avatars";
 
 // Orchestrateur des données affichées sur la page Profil d'un utilisateur
 // sur SES PROPRES données. Distinct de UserService, qui reste scopé à
@@ -100,6 +104,103 @@ export class ProfileService {
                 currentStreak: true,
             },
         });
+    }
+
+    // Remplace l'avatar de l'utilisateur. Stratégie "purge puis pose"
+    // plutôt qu'un upsert sur un chemin fixe : on liste et supprime
+    // D'ABORD tout fichier existant sous le préfixe userId/, puis on
+    // uploade le nouveau. Ça évite les fichiers orphelins si l'extension
+    // change entre deux uploads (ex: un .jpg remplacé par un .png).
+    //
+    // Le détail réel d'une erreur Supabase est désormais loggé ici
+    // (console.error), visible dans le terminal serveur — le client ne
+    // reçoit toujours qu'un message générique via handleApiError, cohérent
+    // avec le traitement des autres erreurs d'infrastructure du projet
+    // (ex: P2002 Prisma) : on ne change pas la politique de sécurité,
+    // on rend juste le diagnostic possible côté développeur.
+    async uploadAvatar(userId, buffer, mimeType) {
+        await this.#clearExistingAvatarFiles(userId);
+
+        const extension = extensionFromMimeType(mimeType);
+        const path = `${userId}/avatar.${extension}`;
+
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from(AVATAR_BUCKET)
+            .upload(path, buffer, { contentType: mimeType, upsert: true });
+
+        if (uploadError) {
+            console.error(
+                "[ProfileService.uploadAvatar] Échec Supabase Storage :",
+                uploadError,
+            );
+            throw new Error(
+                `Échec du téléversement de l'avatar : ${uploadError.message}`,
+            );
+        }
+
+        const { data: publicUrlData } = supabaseAdmin.storage
+            .from(AVATAR_BUCKET)
+            .getPublicUrl(path);
+
+        // Cache-busting : le chemin peut rester identique entre deux
+        // uploads (même extension réutilisée) — un navigateur garderait
+        // alors l'ancienne image en cache sous la même URL. Le timestamp
+        // en query string force un rechargement réel à chaque changement.
+        const avatarUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+
+        return this.#db.user.update({
+            where: { id: userId },
+            data: { avatarUrl },
+            select: { avatarUrl: true },
+        });
+    }
+
+    // Supprime l'avatar et revient à l'initiale par défaut (avatarUrl:
+    // null) — symétrique à uploadAvatar, même nettoyage de stockage.
+    async removeAvatar(userId) {
+        await this.#clearExistingAvatarFiles(userId);
+
+        return this.#db.user.update({
+            where: { id: userId },
+            data: { avatarUrl: null },
+            select: { avatarUrl: true },
+        });
+    }
+
+    // ─── Méthode privée ───────────────────────────────────────────────────
+
+    // Liste et supprime tout fichier existant sous le préfixe userId/ dans
+    // le bucket — appelé avant un nouvel upload ET avant une suppression,
+    // pour ne jamais laisser de fichier orphelin dans Supabase Storage.
+    // Reste "best-effort" volontairement : si lister/supprimer échoue (ex:
+    // bucket inexistant), on logge et on continue plutôt que de bloquer —
+    // l'upload qui suit échouera de toute façon avec un message clair si
+    // le bucket n'existe vraiment pas, pas besoin de dupliquer l'erreur ici.
+    async #clearExistingAvatarFiles(userId) {
+        const { data: existingFiles, error: listError } =
+            await supabaseAdmin.storage.from(AVATAR_BUCKET).list(userId);
+
+        if (listError) {
+            console.error(
+                "[ProfileService.#clearExistingAvatarFiles] Échec du listing :",
+                listError,
+            );
+            return;
+        }
+
+        if (!existingFiles || existingFiles.length === 0) return;
+
+        const paths = existingFiles.map((file) => `${userId}/${file.name}`);
+        const { error: removeError } = await supabaseAdmin.storage
+            .from(AVATAR_BUCKET)
+            .remove(paths);
+
+        if (removeError) {
+            console.error(
+                "[ProfileService.#clearExistingAvatarFiles] Échec de la suppression :",
+                removeError,
+            );
+        }
     }
 }
 

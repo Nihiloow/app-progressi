@@ -3,11 +3,12 @@
 import { calculateRequiredXP } from "@/core/engine/progression";
 
 // Le cercle/anneau seul, EXPORTÉ SÉPARÉMENT : c'est lui qui sert de
-// déclencheur au ProfileMenu (cf. Sidebar.js), sur le modèle TickTick où
-// seul l'avatar rond ouvre le menu — le pseudo affiché dessous n'est pas
-// cliquable. Pas de duplication entre les deux usages (Sidebar avec menu,
-// éventuel futur usage sans menu) : un seul composant, deux compositions
-// possibles autour de lui.
+// déclencheur au ProfileMenu (cf. Sidebar.js) et de base à AvatarEditor
+// (page Profil) — un seul composant, plusieurs compositions autour de lui.
+//
+// Affiche la photo (user.avatarUrl) si elle existe, sinon retombe sur
+// l'initiale du pseudo — AvatarRing ne sait rien de QUI peut éditer cette
+// photo (cf. AvatarEditor, page Profil uniquement) ni d'où elle vient.
 export function AvatarRing({ user }) {
     const requiredXp = calculateRequiredXP(user.level);
     const safeRequiredXp = requiredXp > 0 ? requiredXp : 1;
@@ -47,10 +48,18 @@ export function AvatarRing({ user }) {
                 />
             </svg>
 
-            <div className="z-10 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm dark:bg-zinc-800">
-                <span className="text-2xl font-bold uppercase text-indigo-500">
-                    {user.pseudo.charAt(0)}
-                </span>
+            <div className="z-10 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm dark:bg-zinc-800">
+                {user.avatarUrl ? (
+                    <img
+                        src={user.avatarUrl}
+                        alt={`Avatar de ${user.pseudo}`}
+                        className="h-full w-full object-cover"
+                    />
+                ) : (
+                    <span className="text-2xl font-bold uppercase text-indigo-500">
+                        {user.pseudo.charAt(0)}
+                    </span>
+                )}
             </div>
 
             <div className="absolute -bottom-2 z-20 rounded-full border-4 border-slate-50 bg-indigo-500 px-2 py-0.5 text-xs font-bold text-white transition-all dark:border-[#18181b]">
@@ -67,8 +76,7 @@ export function AvatarRing({ user }) {
 // Composition complète : anneau + pseudo affiché dessous. Le pseudo n'est
 // PAS dans la zone cliquable du menu (cf. Sidebar.js, qui enveloppe
 // uniquement <AvatarRing> dans le ProfileMenu, pas ce composant entier) —
-// reste utilisable tel quel pour un usage futur sans menu (ex: en-tête
-// d'une page Profil), où le clic n'a pas de sens.
+// reste utilisable tel quel pour un usage futur sans édition ni menu.
 export default function AvatarProgress({ user }) {
     return (
         <div className="flex flex-col items-center">

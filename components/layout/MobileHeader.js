@@ -27,8 +27,18 @@ export default function MobileHeader() {
                 lieu de déborder vers la droite façon TickTick, pour ne
                 jamais sortir du viewport mobile. */}
             <ProfileMenu variant="header">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600 transition-transform hover:scale-105 active:scale-95 dark:bg-indigo-500/20 dark:text-indigo-400">
-                    {user?.pseudo ? user.pseudo.charAt(0).toUpperCase() : "T"}
+                <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-indigo-100 text-sm font-bold text-indigo-600 transition-transform hover:scale-105 active:scale-95 dark:bg-indigo-500/20 dark:text-indigo-400">
+                    {user?.avatarUrl ? (
+                        <img
+                            src={user.avatarUrl}
+                            alt=""
+                            className="h-full w-full object-cover"
+                        />
+                    ) : user?.pseudo ? (
+                        user.pseudo.charAt(0).toUpperCase()
+                    ) : (
+                        "T"
+                    )}
                 </span>
             </ProfileMenu>
         </header>

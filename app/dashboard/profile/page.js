@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { useProfile } from "@/hooks/useProfile";
 import { useUser } from "@/hooks/useUser";
-import AvatarProgress from "@/components/AvatarProgress";
+import { AvatarEditor } from "@/components/profile/AvatarEditor";
 import { FlameIcon } from "@/components/ui/icons";
 
 const PRIORITY_LABELS = {
@@ -53,7 +53,7 @@ export default function ProfilePage() {
             </h1>
 
             <section className="mb-8 flex justify-center">
-                <AvatarProgress user={user} />
+                <AvatarEditor user={user} />
             </section>
 
             <section className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-3">

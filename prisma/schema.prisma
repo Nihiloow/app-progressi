@@ -81,6 +81,11 @@ model User {
   status          AccountStatus    @default(ACTIVE)
   xp              Int              @default(0)
   level           Int              @default(1)
+  // Nullable : aucun avatar par défaut, l'initiale du pseudo reste le repli
+  // côté front (cf. AvatarRing). Stocke l'URL publique Supabase Storage
+  // complète (avec query de cache-busting), pas un chemin relatif — évite
+  // de recalculer l'URL publique côté front à chaque affichage.
+  avatarUrl       String?
   tasks           Task[]
   tags            Tag[]
   habits          Habit[]
