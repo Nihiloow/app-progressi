@@ -3,15 +3,13 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import { UserIcon, DashboardIcon } from "@/components/ui/icons";
+import {
+    UserIcon,
+    DashboardIcon,
+    UsersIcon,
+    BanIcon,
+} from "@/components/ui/icons";
 
-// Tiroir bas réservé aux comptes ADMIN sur mobile : un admin a deux
-// destinations possibles (Profil, Admin) mais ne dispose que d'un seul
-// slot d'icône restant dans la BottomNav — ce tiroir résout le conflit.
-// Pattern repris de TaskActionDrawer (voile + panneau translate-y, poignée
-// centrée, pb-safe) mais largement simplifié : deux liens statiques, aucun
-// sous-popover en flux, donc aucun besoin de scroll interne ni de hauteur
-// généreuse (85vh côté TaskActionDrawer) — un panneau compact suffit.
 export function ProfileNavDrawer({ isOpen, onClose }) {
     const panelRef = useFocusTrap(isOpen);
 
@@ -62,16 +60,44 @@ export function ProfileNavDrawer({ isOpen, onClose }) {
                         </span>
                     </Link>
 
-                    <Link
-                        href="/dashboard/admin"
-                        onClick={onClose}
-                        className="flex items-center gap-3 rounded-lg px-3 py-4 text-left text-base font-medium hover:bg-slate-50 dark:hover:bg-zinc-800"
-                    >
-                        <DashboardIcon className="h-5 w-5 text-slate-500 dark:text-zinc-400" />
-                        <span className="text-slate-700 dark:text-slate-200">
-                            Admin
-                        </span>
-                    </Link>
+                    <div className="mt-2 border-t border-slate-100 pt-2 dark:border-zinc-800">
+                        <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                            Administration
+                        </p>
+
+                        <Link
+                            href="/dashboard/admin"
+                            onClick={onClose}
+                            className="flex items-center gap-3 rounded-lg px-3 py-4 text-left text-base font-medium hover:bg-slate-50 dark:hover:bg-zinc-800"
+                        >
+                            <DashboardIcon className="h-5 w-5 text-slate-500 dark:text-zinc-400" />
+                            <span className="text-slate-700 dark:text-slate-200">
+                                Dashboard
+                            </span>
+                        </Link>
+
+                        <Link
+                            href="/dashboard/admin/users"
+                            onClick={onClose}
+                            className="flex items-center gap-3 rounded-lg px-3 py-4 text-left text-base font-medium hover:bg-slate-50 dark:hover:bg-zinc-800"
+                        >
+                            <UsersIcon className="h-5 w-5 text-slate-500 dark:text-zinc-400" />
+                            <span className="text-slate-700 dark:text-slate-200">
+                                Utilisateurs
+                            </span>
+                        </Link>
+
+                        <Link
+                            href="/dashboard/admin/moderation"
+                            onClick={onClose}
+                            className="flex items-center gap-3 rounded-lg px-3 py-4 text-left text-base font-medium hover:bg-slate-50 dark:hover:bg-zinc-800"
+                        >
+                            <BanIcon className="h-5 w-5 text-slate-500 dark:text-zinc-400" />
+                            <span className="text-slate-700 dark:text-slate-200">
+                                Modération
+                            </span>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </>
