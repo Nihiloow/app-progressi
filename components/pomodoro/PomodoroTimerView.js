@@ -13,10 +13,7 @@ import { ListIcon, ChevronRightIcon } from "@/components/ui/icons";
 
 // Page chrono, intégrée au layout dashboard (nav toujours visible autour)
 // — plus un overlay plein écran. Le timer lui-même vit dans
-// PomodoroTimerProvider (contexte global, monté une fois) : naviguer vers
-// une autre page du dashboard pendant un cycle WORK actif ne l'interrompt
-// pas, exactement comme avant, mais sans qu'aucun écran ne masque le
-// reste de l'application.
+// PomodoroTimerProvider
 export function PomodoroTimerView() {
     const timer = usePomodoroTimerContext();
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -50,8 +47,7 @@ export function PomodoroTimerView() {
 
     // "En pause" sous le label de phase uniquement si le décompte est
     // arrêté pendant un cycle actif (WORK ou BREAK en pause) — rien en
-    // phase WORK qui tourne, rien en IDLE (cf. demande : pas affiché s'il
-    // n'y a pas de pause en cours).
+    // phase WORK qui tourne, rien en IDLE
     const statusLabel =
         timer.phase !== "IDLE" && !timer.isRunning ? "En pause" : null;
 
@@ -89,7 +85,7 @@ export function PomodoroTimerView() {
                 </button>
             </div>
 
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6">
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 pb-8">
                 {timer.phase === "IDLE" ? (
                     <PomodoroSettings
                         settings={timer.settings}
@@ -118,7 +114,7 @@ export function PomodoroTimerView() {
                 )}
             </div>
 
-            <footer className="flex flex-col items-center gap-3 pb-12">
+            <footer className="flex flex-col items-center gap-3 pb-40">
                 <PomodoroControls
                     phase={timer.phase}
                     isRunning={timer.isRunning}

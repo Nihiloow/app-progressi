@@ -59,7 +59,7 @@ export default function ProfilePage() {
             <section className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
                     <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
-                        Quêtes accomplies
+                        Tâches accomplies
                     </p>
                     <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
                         {productivityStats.completedTasks}
@@ -75,7 +75,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="col-span-2 rounded-xl border border-slate-200 bg-white p-5 lg:col-span-1 dark:border-zinc-800 dark:bg-zinc-900">
                     <p className="text-sm font-medium text-slate-500 dark:text-zinc-400">
-                        Quêtes créées
+                        Tâches créées
                     </p>
                     <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-100">
                         {productivityStats.totalTasks}
@@ -134,7 +134,7 @@ export default function ProfilePage() {
             {productivityStats.priorityBreakdown.length > 0 && (
                 <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
                     <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-zinc-300">
-                        Répartition des quêtes accomplies par priorité
+                        Répartition des tâches accomplies par priorité
                     </h2>
                     <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
                         {productivityStats.priorityBreakdown.map((row) => (

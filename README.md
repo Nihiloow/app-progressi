@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Progressi
 
-## Getting Started
+Application web de productivité gamifiée, inspirée de TickTick, avec une identité RPG minimaliste : tâches, habitudes, système d'XP et de niveaux, streaks, Pomodoro et modération.
 
-First, run the development server:
+Projet de fin d'année — Bachelor 2 Fullstack, CODA Orléans.
 
-```bash
+## Accès à l'application déployée
+
+**URL** : [app-progressi.vercel.app](https://app-progressi.vercel.app)
+
+### Comptes de test
+
+| Rôle           | Email         | Mot de passe |
+| -------------- | ------------- | ------------ |
+| Utilisateur    | test@user.fr  | **12345678** |
+| Administrateur | test@admin.fr | **12345678** |
+
+Le compte administrateur a accès au dashboard d'administration (gestion des utilisateurs, modération, statistiques globales), accessible via le menu Profil → Administration.
+
+## Stack technique
+
+Next.js 15 (App Router), Prisma + PostgreSQL (Supabase), NextAuth, React Query, Tailwind CSS v4, Zod, Recharts.
+
+## Fonctionnalités principales
+
+- Gestion de tâches avec priorités, types, tags, dates d'échéance
+- Système d'habitudes avec suivi de streaks
+- Minuteur Pomodoro avec historique de séances
+- Système de gamification (XP, niveaux, quotas journaliers anti-triche)
+- Tableau de bord personnel (statistiques, graphique d'évolution XP)
+- Administration (gestion des comptes, modération, statistiques globales)
+
+## Documentation
+
+- Documentation technique : [lien ou nom du fichier si tu en as un séparé]
+- Documentation utilisateur : [idem]
+
+## Développement local
+
+\`\`\`bash
+npm install
+npx prisma generate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Variables d'environnement requises : voir `.env.example` (à créer si tu ne l'as pas).
