@@ -1,6 +1,7 @@
 "use client";
 
 import { useModerationFlags } from "@/hooks/useModerationFlags";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const FLAG_LABELS = {
     RAPID_CYCLE: "Cycle rapide validation/décochage",
@@ -37,9 +38,7 @@ export default function ModerationPage() {
 
     return (
         <main className="flex-1 overflow-y-auto p-6">
-            <h1 className="mb-2 text-2xl font-bold text-slate-800 dark:text-slate-100">
-                Modération
-            </h1>
+            <PageHeader title="Modération" />
             <p className="mb-6 text-sm text-slate-500 dark:text-zinc-400">
                 Comportements signalés automatiquement. Aucune sanction
                 n&apos;est appliquée par le système — la décision reste à ton

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useChangePassword } from "@/hooks/useChangePassword";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function SettingsPage() {
     const [currentPassword, setCurrentPassword] = useState("");
@@ -42,9 +43,7 @@ export default function SettingsPage() {
 
     return (
         <main className="flex-1 overflow-y-auto p-6">
-            <h1 className="mb-6 text-2xl font-bold text-slate-800 dark:text-slate-100">
-                Paramètres
-            </h1>
+            <PageHeader title="Paramètres" />
 
             <section className="max-w-md rounded-xl border border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
                 <h2 className="mb-1 text-sm font-semibold text-slate-700 dark:text-zinc-300">
