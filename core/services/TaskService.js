@@ -37,6 +37,20 @@ export class TaskService {
         this.#moderationService = moderationSvc;
     }
 
+    // Liste les tâches de l'utilisateur, tags inclus, plus récentes en
+    // premier. Aucune règle métier ici (lecture brute), mais centralisée
+    // dans le service par cohérence architecturale : la route ne doit
+    // jamais toucher Prisma directement, même pour une lecture simple —
+    // sinon l'ownership et la forme de la requête se dupliquent dès qu'un
+    // second point d'entrée a besoin de la même liste un jour.
+    async listTasks(userId) {
+        return this.#db.task.findMany({
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+            include: { tags: true },
+        });
+    }
+
     // Crée une tâche pour l'utilisateur et synchronise ses tags en une seule
     // transaction. tagNames est toujours un tableau (default([]) du schéma) :
     // syncTagsForTask gère le cas [] sans créer de liaison.
@@ -88,6 +102,17 @@ export class TaskService {
                 include: { tags: true },
             });
         });
+    }
+
+    // Supprime une quête après vérification d'ownership. Le ledger XpEvent
+    // survit (onDelete: SetNull sur XpEvent.taskId) : supprimer une quête
+    // complétée ne rembourse rien, ne libère pas de créneau de quota, et
+    // l'historique d'XP reste exact — même garantie que documentée
+    // auparavant dans la route, déplacée ici pour que toute opération sur
+    // une tâche passe par la même porte d'entrée.
+    async deleteTask(taskId, userId) {
+        await this.#getOwnedTask(this.#db, taskId, userId);
+        await this.#db.task.delete({ where: { id: taskId } });
     }
 
     // Point d'entrée unique pour la route PATCH /status : dispatch vers la

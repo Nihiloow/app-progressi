@@ -6,10 +6,9 @@ export function RippleRing({ delay = "0s" }) {
             r="40"
             stroke="currentColor"
             fill="transparent"
-            className="motion-reduce:hidden"
+            className="motion-reduce:hidden animate-auth-ripple"
             style={{
                 transformOrigin: "100px 100px",
-                animation: "auth-ripple 9s ease-out infinite",
                 animationDelay: delay,
             }}
         />

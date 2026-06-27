@@ -1,7 +1,4 @@
-// Destination : app/api/tasks/route.js
-
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/requireSession";
 import { createTaskSchema } from "@/core/validation/taskSchema";
 import { handleApiError } from "@/lib/handleApiError";
@@ -11,11 +8,7 @@ export async function GET() {
     try {
         const user = await requireSession();
 
-        const tasks = await prisma.task.findMany({
-            where: { userId: user.id },
-            orderBy: { createdAt: "desc" },
-            include: { tags: true },
-        });
+        const tasks = await taskService.listTasks(user.id);
 
         return NextResponse.json(tasks, { status: 200 });
     } catch (error) {
