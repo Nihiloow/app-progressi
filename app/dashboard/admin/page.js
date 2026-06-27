@@ -1,34 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useAdminUsers } from "@/hooks/useAdminUsers";
-import { useSetUserStatus } from "@/hooks/useSetUserStatus";
-import { useDeleteUser } from "@/hooks/useDeleteUser";
-import { useResetProgression } from "@/hooks/useResetProgression";
-import { DeleteUserDialog } from "@/components/admin/DeleteUserDialog";
-import { ResetProgressionDialog } from "@/components/admin/ResetProgressionDialog";
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+    CartesianGrid,
+} from "recharts";
+import { useAdminStats } from "@/hooks/useAdminStats";
+import { StatCard } from "@/components/admin/StatCard";
 import { PageHeader } from "@/components/ui/PageHeader";
 
-export default function AdminUsersPage() {
-    const { data: users, isLoading, error } = useAdminUsers();
-    const setStatus = useSetUserStatus();
-    const deleteUser = useDeleteUser();
-    const resetProgression = useResetProgression();
-    const [userToDelete, setUserToDelete] = useState(null);
-    const [userToReset, setUserToReset] = useState(null);
+export default function AdminDashboardPage() {
+    const { data: stats, isLoading, error } = useAdminStats();
 
     if (isLoading) {
         return (
             <main className="flex-1 overflow-y-auto p-6">
                 <div className="mb-6 h-8 w-56 animate-pulse rounded bg-slate-200 dark:bg-zinc-800" />
-                <div className="space-y-3">
+                <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
                     {[1, 2, 3, 4].map((i) => (
                         <div
                             key={i}
-                            className="h-16 w-full animate-pulse rounded-lg bg-slate-100 dark:bg-zinc-800/50"
+                            className="h-24 animate-pulse rounded-xl bg-slate-100 dark:bg-zinc-800/50"
                         />
                     ))}
                 </div>
+                <div className="h-64 w-full animate-pulse rounded-xl bg-slate-100 dark:bg-zinc-800/50" />
             </main>
         );
     }
@@ -43,127 +43,128 @@ export default function AdminUsersPage() {
         );
     }
 
-    const handleToggleStatus = (user) => {
-        const status = user.status === "ACTIVE" ? "DISABLED" : "ACTIVE";
-        setStatus.mutate({ userId: user.id, status });
-    };
-
-    const handleConfirmDelete = (userId) => {
-        deleteUser.mutate(userId, {
-            onSuccess: () => setUserToDelete(null),
-        });
-    };
-
-    const handleConfirmReset = (userId) => {
-        resetProgression.mutate(userId, {
-            onSuccess: () => setUserToReset(null),
-        });
-    };
-
     return (
         <main className="flex-1 overflow-y-auto p-6">
-            <PageHeader title="Gestion des utilisateurs" />
+            <PageHeader title="Dashboard" />
 
-            <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-zinc-800">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-slate-500 dark:bg-zinc-900 dark:text-zinc-400">
-                        <tr>
-                            <th className="px-4 py-3 font-medium">Pseudo</th>
-                            <th className="hidden px-4 py-3 font-medium sm:table-cell">
-                                Email
-                            </th>
-                            <th className="px-4 py-3 font-medium">Niveau</th>
-                            <th className="px-4 py-3 font-medium">Statut</th>
-                            <th className="px-4 py-3 text-right font-medium">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
-                        {users.map((user) => (
-                            <tr
-                                key={user.id}
-                                className="bg-white dark:bg-zinc-950"
-                            >
-                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
-                                    {user.pseudo}
-                                    {user.role === "ADMIN" && (
-                                        <span className="ml-2 rounded bg-indigo-50 px-1.5 py-0.5 text-xs font-semibold text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                                            Admin
-                                        </span>
-                                    )}
-                                </td>
-                                <td className="hidden px-4 py-3 text-slate-500 dark:text-zinc-400 sm:table-cell">
-                                    {user.email}
-                                </td>
-                                <td className="px-4 py-3 text-slate-700 dark:text-zinc-300">
-                                    {user.level}
-                                </td>
-                                <td className="px-4 py-3">
-                                    <span
-                                        className={
-                                            user.status === "ACTIVE"
-                                                ? "rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                                                : "rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500 dark:bg-zinc-800 dark:text-zinc-400"
-                                        }
-                                    >
-                                        {user.status === "ACTIVE"
-                                            ? "Actif"
-                                            : "Désactivé"}
+            <section className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <StatCard label="Utilisateurs" value={stats.totalUsers} />
+                <StatCard label="Comptes actifs" value={stats.activeUsers} />
+                <StatCard label="Niveau moyen" value={stats.averageLevel} />
+                <StatCard
+                    label="Quêtes accomplies"
+                    value={stats.completedTasks}
+                />
+            </section>
+
+            <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+                <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-zinc-300">
+                    XP distribué — 30 derniers jours
+                </h2>
+                <div className="h-64 w-full">
+                    <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                        minWidth={0}
+                        minHeight={0}
+                    >
+                        <LineChart data={stats.xpTimeline}>
+                            <CartesianGrid
+                                strokeDasharray="3 3"
+                                stroke="currentColor"
+                                className="text-slate-200 dark:text-zinc-800"
+                            />
+                            <XAxis
+                                dataKey="date"
+                                tick={{ fontSize: 11 }}
+                                tickFormatter={(d) => d.slice(5)}
+                                stroke="currentColor"
+                                className="text-slate-400"
+                            />
+                            <YAxis
+                                tick={{ fontSize: 11 }}
+                                stroke="currentColor"
+                                className="text-slate-400"
+                                allowDecimals={false}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    borderRadius: "0.5rem",
+                                    fontSize: "0.8rem",
+                                }}
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="xp"
+                                stroke="#6366f1"
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            </section>
+
+            <div className="grid gap-8 lg:grid-cols-2">
+                <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+                    <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-zinc-300">
+                        Quêtes les plus fréquentes
+                    </h2>
+                    {stats.topTasks.length === 0 ? (
+                        <p className="text-sm text-slate-400 dark:text-zinc-500">
+                            Aucune quête créée pour l&apos;instant.
+                        </p>
+                    ) : (
+                        <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
+                            {stats.topTasks.map((row) => (
+                                <li
+                                    key={row.title}
+                                    className="flex items-center justify-between py-2 text-sm"
+                                >
+                                    <span className="truncate text-slate-700 dark:text-zinc-300">
+                                        {row.title}
                                     </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex justify-end gap-2">
-                                        <button
-                                            onClick={() => setUserToReset(user)}
-                                            className="rounded-lg px-3 py-1.5 text-xs font-medium text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-500/10"
-                                        >
-                                            Réinitialiser
-                                        </button>
-                                        <button
-                                            onClick={() =>
-                                                handleToggleStatus(user)
-                                            }
-                                            disabled={setStatus.isPending}
-                                            className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                                        >
-                                            {user.status === "ACTIVE"
-                                                ? "Désactiver"
-                                                : "Réactiver"}
-                                        </button>
-                                        <button
-                                            onClick={() =>
-                                                setUserToDelete(user)
-                                            }
-                                            className="rounded-lg px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
-                                        >
-                                            Supprimer
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                    <span className="ml-3 flex-shrink-0 font-semibold text-slate-900 dark:text-slate-100">
+                                        {row.count}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </section>
+
+                <section className="rounded-xl border border-slate-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+                    <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-zinc-300">
+                        Répartition des comptes
+                    </h2>
+                    <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
+                        <li className="flex items-center justify-between py-2 text-sm">
+                            <span className="text-slate-700 dark:text-zinc-300">
+                                Actifs
+                            </span>
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                {stats.activeUsers}
+                            </span>
+                        </li>
+                        <li className="flex items-center justify-between py-2 text-sm">
+                            <span className="text-slate-700 dark:text-zinc-300">
+                                Désactivés
+                            </span>
+                            <span className="font-semibold text-slate-500 dark:text-zinc-400">
+                                {stats.disabledUsers}
+                            </span>
+                        </li>
+                        <li className="flex items-center justify-between py-2 text-sm">
+                            <span className="text-slate-700 dark:text-zinc-300">
+                                XP total distribué
+                            </span>
+                            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                {stats.distributedXp}
+                            </span>
+                        </li>
+                    </ul>
+                </section>
             </div>
-
-            {userToDelete && (
-                <DeleteUserDialog
-                    user={userToDelete}
-                    onConfirm={handleConfirmDelete}
-                    onCancel={() => setUserToDelete(null)}
-                    isPending={deleteUser.isPending}
-                />
-            )}
-
-            {userToReset && (
-                <ResetProgressionDialog
-                    user={userToReset}
-                    onConfirm={handleConfirmReset}
-                    onCancel={() => setUserToReset(null)}
-                    isPending={resetProgression.isPending}
-                />
-            )}
         </main>
     );
 }
