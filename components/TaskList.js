@@ -12,15 +12,16 @@ export default function TaskList({ tasks, selectedTaskId, onSelectTask }) {
     }
 
     return (
-        <div className="space-y-3">
+        <ul className="list-none space-y-3 p-0">
             {tasks.map((task) => (
-                <TaskItem
-                    key={task.id}
-                    task={task}
-                    isSelected={task.id === selectedTaskId}
-                    onSelect={onSelectTask}
-                />
+                <li key={task.id}>
+                    <TaskItem
+                        task={task}
+                        isSelected={task.id === selectedTaskId}
+                        onSelect={onSelectTask}
+                    />
+                </li>
             ))}
-        </div>
+        </ul>
     );
 }

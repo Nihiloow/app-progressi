@@ -13,10 +13,12 @@ export function HabitList({ habits }) {
     }
 
     return (
-        <div className="space-y-3">
+        <ul className="list-none space-y-3 p-0">
             {habits.map((habit) => (
-                <HabitItem key={habit.id} habit={habit} />
+                <li key={habit.id}>
+                    <HabitItem habit={habit} />
+                </li>
             ))}
-        </div>
+        </ul>
     );
 }
