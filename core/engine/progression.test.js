@@ -4,7 +4,11 @@ import {
     removeExperience,
     calculateRequiredXP,
 } from "./progression";
-import { getXpReward, getDailyLimit } from "../config/gamification.js";
+import {
+    getXpReward,
+    getDailyLimit,
+    getStreakMultiplier,
+} from "../config/gamification.js";
 
 describe("Palier de niveau", () => {
     test("Le palier vaut niveau * 100", () => {
@@ -108,5 +112,22 @@ describe("Barème de gamification", () => {
     test("Une priorité inconnue échoue bruyamment au lieu d'un défaut silencieux", () => {
         expect(() => getXpReward("LEGENDARY")).toThrow();
         expect(() => getDailyLimit(undefined)).toThrow();
+    });
+});
+
+describe("Multiplicateur de streak", () => {
+    test("Paliers 0/3/7/30 jours", () => {
+        expect(getStreakMultiplier(0)).toBe(1.0);
+        expect(getStreakMultiplier(2)).toBe(1.0);
+        expect(getStreakMultiplier(3)).toBe(1.2);
+        expect(getStreakMultiplier(7)).toBe(1.5);
+        expect(getStreakMultiplier(30)).toBe(2.0);
+        expect(getStreakMultiplier(100)).toBe(2.0);
+    });
+
+    test("Streak invalide échoue bruyamment", () => {
+        expect(() => getStreakMultiplier(-1)).toThrow();
+        expect(() => getStreakMultiplier("3")).toThrow();
+        expect(() => getStreakMultiplier(NaN)).toThrow();
     });
 });
