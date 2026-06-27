@@ -114,7 +114,7 @@ export function TaskContextMenu({
         <div
             ref={menuRef}
             role="menu"
-            aria-label="Options de la quête"
+            aria-label="Options de la tâche"
             style={style}
             // PAS de overflow-hidden ici : un sous-menu (OptionMenu, TagPanel)
             // s'ouvre en position absolute à droite via left-full, donc hors
@@ -269,7 +269,7 @@ export function TaskContextMenu({
                             : "text-slate-700 dark:text-slate-200"
                     }
                 >
-                    {isAbandoned ? "Réactiver la quête" : "Ne fera pas"}
+                    {isAbandoned ? "Réactiver la tâche" : "Ne fera pas"}
                 </span>
             </button>
 
@@ -286,7 +286,7 @@ export function TaskContextMenu({
                 className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-500 outline-none transition-colors hover:bg-red-50 focus-visible:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10 dark:focus-visible:bg-red-500/10"
             >
                 <TrashIcon className="h-4 w-4" />
-                Supprimer la quête
+                Supprimer la tâche
             </button>
         </div>
     );
