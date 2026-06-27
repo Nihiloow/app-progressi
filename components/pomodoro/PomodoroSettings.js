@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CloseIcon, CheckIcon } from "@/components/ui/icons";
+import { CloseIcon, CheckIcon, SettingsIcon } from "@/components/ui/icons";
 import { useUpdatePomodoroSettings } from "@/hooks/usePomodoroSettings";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
@@ -13,8 +13,17 @@ import { useFocusTrap } from "@/hooks/useFocusTrap";
 // l'écran, indépendante de la position du déclencheur, élimine ce
 // problème par construction. Déclencheur toujours arbitraire (children),
 // même pattern que ProfileMenu/AvatarEditor.
+//
+// L'overlay au survol (icône réglages en fondu, centré) reprend le même
+// signal visuel qu'AvatarEditor pour son propre cercle cliquable : style
+// inline plutôt que classes Tailwind conditionnelles, pour la même raison
+// que dans AvatarEditor — un style inline s'applique toujours sans
+// dépendre d'aucune étape de compilation. Affiché uniquement quand isOpen
+// est false : inutile de montrer "clique pour ouvrir" pendant que la
+// modale est déjà ouverte.
 export function PomodoroSettings({ settings, onChange, children }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
     const [draft, setDraft] = useState(settings);
     const updateSettings = useUpdatePomodoroSettings();
     const panelRef = useFocusTrap(isOpen);
@@ -45,12 +54,28 @@ export function PomodoroSettings({ settings, onChange, children }) {
             <button
                 type="button"
                 onClick={handleOpen}
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
                 aria-haspopup="true"
                 aria-expanded={isOpen}
                 aria-label="Régler la durée du minuteur"
-                className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
+                className="relative rounded-full outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
             >
                 {children}
+
+                {/* Centré sur le cercle entier (PomodoroRing fait h-72 w-72) :
+                    pas besoin de dimensions précises, inset-0 + flex suffit
+                    à centrer l'icône quel que soit le contenu de children. */}
+                <div
+                    style={{
+                        opacity: isHovering && !isOpen ? 1 : 0,
+                        backgroundColor:
+                            isHovering && !isOpen
+                                ? "rgba(0, 0, 0, 0.35)"
+                                : "transparent",
+                    }}
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full transition-opacity duration-200"
+                ></div>
             </button>
 
             {isOpen && (
