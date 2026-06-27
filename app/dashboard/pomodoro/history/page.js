@@ -1,9 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { usePomodoroHistory } from "@/hooks/usePomodoroHistory";
 import { PomodoroHistoryList } from "@/components/pomodoro/PomodoroHistoryList";
+import { ChevronLeftIcon } from "@/components/ui/icons";
 
 export default function PomodoroHistoryPage() {
+    const router = useRouter();
     const { data: sessions, isLoading, error } = usePomodoroHistory();
 
     if (isLoading) {
@@ -34,9 +37,26 @@ export default function PomodoroHistoryPage() {
 
     return (
         <main className="flex-1 overflow-y-auto p-6">
-            <h1 className="mb-6 text-2xl font-bold text-slate-800 dark:text-slate-100">
-                Historique des séances
-            </h1>
+            {/* Bouton retour contextuel : sans lui, cette page n'avait
+                aucun chemin de sortie visible sur mobile (la BottomNav n'a
+                pas d'entrée Historique) — seul le bouton natif du
+                navigateur existait, peu fiable et peu découvrable.
+                router.back() plutôt qu'un lien statique vers
+                /dashboard/pomodoro : respecte le vrai point d'entrée réel
+                de l'utilisateur, quel qu'il soit. */}
+            <div className="mb-6 flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => router.back()}
+                    aria-label="Retour"
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                >
+                    <ChevronLeftIcon className="h-5 w-5" />
+                </button>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                    Historique des séances
+                </h1>
+            </div>
 
             <div className="mx-auto max-w-3xl">
                 <PomodoroHistoryList sessions={sessions} />
