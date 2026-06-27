@@ -1,9 +1,10 @@
 "use client";
 
 import { useCompleteHabit } from "@/hooks/useCompleteHabit";
+import { useDeleteHabit } from "@/hooks/useDeleteHabit";
 import { isStreakAlive } from "@/core/engine/streak";
 import { getPriorityConfig } from "@/components/ui/taskAppearance";
-import { FlameIcon, CheckIcon } from "@/components/ui/icons";
+import { FlameIcon, CheckIcon, TrashIcon } from "@/components/ui/icons";
 
 // Détermine si l'habitude a déjà été validée aujourd'hui, côté front,
 // SANS appel serveur supplémentaire : on compare lastCompletedOn (déjà
@@ -23,6 +24,7 @@ function isDoneToday(lastCompletedOn) {
 
 export function HabitItem({ habit }) {
     const completeHabit = useCompleteHabit();
+    const deleteHabit = useDeleteHabit();
     const priorityConfig = getPriorityConfig(habit.priority);
 
     const doneToday = isDoneToday(habit.lastCompletedOn);
@@ -37,6 +39,15 @@ export function HabitItem({ habit }) {
     const handleComplete = () => {
         if (doneToday || completeHabit.isPending) return;
         completeHabit.mutate(habit.id);
+    };
+
+    // Suppression directe, sans confirmation — alignée sur le
+    // comportement des tâches (useDeleteTask), pas un dialogue à deux
+    // étapes comme DeleteUserDialog, qui reste réservé à la suppression
+    // d'un compte utilisateur entier.
+    const handleDelete = () => {
+        if (deleteHabit.isPending) return;
+        deleteHabit.mutate(habit.id);
     };
 
     return (
@@ -93,9 +104,23 @@ export function HabitItem({ habit }) {
                 </div>
             </div>
 
+            <button
+                onClick={handleDelete}
+                disabled={deleteHabit.isPending}
+                aria-label="Supprimer l'habitude"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:cursor-wait disabled:opacity-50 dark:text-zinc-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+            >
+                <TrashIcon className="h-4 w-4" />
+            </button>
+
             {completeHabit.isError && (
                 <p className="text-xs text-red-500">
                     {completeHabit.error.message}
+                </p>
+            )}
+            {deleteHabit.isError && (
+                <p className="text-xs text-red-500">
+                    {deleteHabit.error.message}
                 </p>
             )}
         </div>
