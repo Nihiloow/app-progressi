@@ -15,13 +15,13 @@ enum Role {
   ADMIN
 }
 
-// Permet à l'admin de désactiver un compte sans le supprimer (exigence du CDC)
+// Permet à l'admin de désactiver un compte sans le supprimer
 enum AccountStatus {
   ACTIVE
   DISABLED
 }
 
-// Importance de la tâche (drapeaux façon TickTick) : seule source du barème XP
+// Importance de la tâche
 enum Priority {
   HIGH
   MEDIUM
@@ -37,7 +37,7 @@ enum TaskType {
   NONE
 }
 
-// Remplace le booléen isCompleted : WONT_DO = "Ne fera pas" (façon TickTick),
+// Remplace le booléen isCompleted : WONT_DO = "Ne fera pas"
 // distinct de DONE car abandonner une tâche ne rapporte pas d'XP
 enum TaskStatus {
   TODO
@@ -54,24 +54,19 @@ enum XpEventType {
 // Fréquence de l'habitude. Seul DAILY est implémenté en v1 — le CDC ne
 // demande que des "jours consécutifs". WEEKLY existe dans l'enum pour ne
 // pas fermer la porte au schéma, mais le service rejette tout ce qui n'est
-// pas DAILY (YAGNI : pas de logique de calcul de streak hebdo demandée).
+// pas DAILY
 enum HabitFrequency {
   DAILY
   WEEKLY
 }
 
-// Type de comportement suspect détecté. Un seul type implémenté en v1
-// (RAPID_CYCLE) : volontairement restreint à ce qui a un sens de triche
-// réel ici — un cycle complet validation→décochage ne rapporte jamais
-// plus d'XP net (le refund est exact), répéter ce cycle n'a donc aucun
-// intérêt légitime. L'enum laisse la porte ouverte à d'autres types futurs
-// sans migration de schéma à chaque ajout.
+// Type de comportement suspect détecté.
 enum ModerationFlagType {
   RAPID_CYCLE
 }
 
 // Phase d'une session Pomodoro : alterne travail et pause, chacune
-// skippable. Seule la phase WORK rapporte de l'XP (cf. PomodoroSession).
+// skippable. Seule la phase WORK rapporte de l'XP
 enum PomodoroPhase {
   WORK
   BREAK
@@ -88,10 +83,6 @@ model User {
   status          AccountStatus     @default(ACTIVE)
   xp              Int               @default(0)
   level           Int               @default(1)
-  // Nullable : aucun avatar par défaut, l'initiale du pseudo reste le repli
-  // côté front (cf. AvatarRing). Stocke l'URL publique Supabase Storage
-  // complète (avec query de cache-busting), pas un chemin relatif — évite
-  // de recalculer l'URL publique côté front à chaque affichage.
   avatarUrl       String?
   tasks           Task[]
   tags            Tag[]
@@ -154,9 +145,6 @@ model Tag {
 }
 
 // Habitude récurrente (quête répétée, distincte de Task = quête unique).
-// currentStreak/bestStreak/lastCompletedOn sont un CACHE de lecture,
-// recalculé en transaction — même pattern que User.xp/level : la source de
-// vérité réelle est HabitCompletion (append-only), jamais ce cache.
 model Habit {
   id         String         @id @default(uuid())
   title      String
@@ -167,8 +155,7 @@ model Habit {
   currentStreak   Int       @default(0)
   bestStreak      Int       @default(0)
   // Jour calendaire de la dernière validation (toujours normalisé à 00:00
-  // local au moment de l'écriture), pas un timestamp précis — sert au calcul
-  // paresseux de rupture de streak à la lecture.
+  // local au moment de l'écriture), pas un timestamp précis
   lastCompletedOn DateTime?
 
   completions HabitCompletion[]
@@ -183,11 +170,7 @@ model Habit {
   @@index([userId, createdAt])
 }
 
-// Une ligne = un jour validé pour une habitude donnée. Append-only, jamais
-// modifiée ni supprimée — c'est le journal de vérité du streak, au même
-// titre que XpEvent pour l'XP. completedOn est un jour calendaire normalisé
-// (00:00 local), pas un timestamp : l'unique ci-dessous empêche physiquement
-// deux validations le même jour pour la même habitude.
+// Une ligne = un jour validé pour une habitude donnée. Append-only
 model HabitCompletion {
   id          String   @id @default(uuid())
   completedOn DateTime
@@ -203,7 +186,7 @@ model HabitCompletion {
 
 // Livre de comptes de l'XP : source de vérité unique, append-only.
 // Le solde User.xp/level est un cache de lecture maintenu en transaction.
-// Sert aussi de log des actions critiques (exigence du CDC) et alimente
+// Sert aussi de log des actions critiques et alimente
 // les graphiques d'évolution sur 30 jours.
 model XpEvent {
   id     String      @id @default(uuid())
@@ -219,11 +202,6 @@ model XpEvent {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // SetNull : supprimer une tâche ne falsifie pas le livre de comptes.
-  // Un événement vient d'une tâche, d'une habitude OU d'une session
-  // Pomodoro, jamais de deux à la fois — règle disciplinée au niveau
-  // du service (pas de CHECK constraint SQL), documentée ici plutôt
-  // qu'imposée en base.
   taskId String?
   task   Task?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
 
@@ -256,14 +234,6 @@ model XpEvent {
   @@index([pomodoroSessionId])
 }
 
-// Journal d'événements suspects, distinct du XpEvent (qui reste un livre
-// de comptes financier, pas un journal de modération). Append-only,
-// jamais modifié — un flag existe ou n'existe pas, on ne le "résout" pas
-// en le supprimant : la trace doit survivre pour l'audit, même si l'admin
-// décide de ne rien faire derrière. AUCUNE sanction automatique n'est
-// déclenchée par la création d'un flag : c'est une donnée de visibilité
-// pour l'admin, qui garde la décision humaine (cohérent avec setStatus/
-// resetProgression qui sont des actions admin explicites, jamais auto).
 model ModerationFlag {
   id     String             @id @default(uuid())
   type   ModerationFlagType
@@ -292,9 +262,7 @@ model ModerationFlag {
 // manuel) — le minuteur en cours est un state client volatile, jamais
 // persisté tant qu'il tourne (pas de reprise après refresh, choix acté).
 // actualWorkSeconds est le temps RÉEL en phase WORK, seul compte pour
-// xpFromTime — la phase BREAK ne rapporte jamais d'XP. xpFromTime et
-// xpFromTask sont stockés séparément (pas fusionnés) pour permettre
-// l'affichage détaillé façon TickTick dans l'historique.
+// xpFromTime — la phase BREAK ne rapporte jamais d'XP.
 model PomodoroSession {
   id             String  @id @default(uuid())
 
@@ -329,6 +297,5 @@ model PomodoroSession {
 
   createdAt DateTime @default(now())
 
-  // L'historique façon TickTick liste par utilisateur, trié par date
   @@index([userId, createdAt])
 }

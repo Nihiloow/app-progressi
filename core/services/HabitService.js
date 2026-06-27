@@ -15,8 +15,7 @@ import {
 // SUPPORTE PAS la dévalidation — décision actée : une habitude validée
 // pour le jour reste validée, contrairement aux tâches qui peuvent être
 // rouvertes. Le gain en simplicité (pas de recalcul de streak à l'envers)
-// l'emporte sur la symétrie totale avec TaskService, pour un cas que le
-// CDC ne demande pas.
+// l'emporte sur la symétrie totale avec TaskService
 export class HabitService {
     #db;
 
@@ -56,8 +55,7 @@ export class HabitService {
     // Archivage plutôt que suppression dure par défaut (cohérent avec le
     // choix ACTIVE/DISABLED des comptes) : on garde l'historique de streak
     // et le ledger XP intacts. Une vraie suppression reste possible via
-    // remove() si Nathan en a besoin côté UI plus tard (YAGNI : pas
-    // exposée en route pour l'instant).
+    // remove() si Nathan en a besoin côté UI plus tard
     async archive(habitId, userId) {
         await this.#getOwnedHabit(this.#db, habitId, userId);
 

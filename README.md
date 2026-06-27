@@ -1,8 +1,8 @@
 # Progressi
 
-Application web de productivité gamifiée, inspirée de TickTick, avec une identité RPG minimaliste : tâches, habitudes, système d'XP et de niveaux, streaks, Pomodoro et modération.
+Application web de productivité gamifiée, avec une identité RPG minimaliste : tâches, habitudes, système d'XP et de niveaux, streaks, Pomodoro et modération.
 
-Projet de fin d'année — Bachelor 2 Fullstack, CODA Orléans.
+Projet de fin d'année — Bachelor Fullstack, CODA Orléans.
 
 ## Accès à l'application déployée
 
@@ -29,11 +29,6 @@ Next.js 15 (App Router), Prisma + PostgreSQL (Supabase), NextAuth, React Query, 
 - Système de gamification (XP, niveaux, quotas journaliers anti-triche)
 - Tableau de bord personnel (statistiques, graphique d'évolution XP)
 - Administration (gestion des comptes, modération, statistiques globales)
-
-## Documentation
-
-- Documentation technique : [lien ou nom du fichier si tu en as un séparé]
-- Documentation utilisateur : [idem]
 
 ## Développement local
 

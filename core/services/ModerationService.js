@@ -57,8 +57,7 @@ export class ModerationService {
     // Liste des flags pour le dashboard admin, du plus récent au plus
     // ancien. include user/task : l'admin a besoin du pseudo et du titre
     // sans requête supplémentaire — petite table, pas de pagination
-    // nécessaire pour la portée de ce projet (YAGNI : pas de curseur tant
-    // que le volume ne le justifie pas).
+    // nécessaire pour la portée de ce projet
     async listFlags() {
         return this.#db.moderationFlag.findMany({
             orderBy: { createdAt: "desc" },

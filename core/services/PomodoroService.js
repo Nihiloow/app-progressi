@@ -24,8 +24,7 @@ export class PomodoroService {
         this.#db = db;
     }
 
-    // Historique des sessions terminées, plus récentes en premier — sert
-    // l'écran de suivi façon TickTick.
+    // Historique des sessions terminées, plus récentes en premier
     async list(userId) {
         return this.#db.pomodoroSession.findMany({
             where: { userId },
