@@ -26,3 +26,11 @@ export const completePomodoroSessionSchema = z
             "Le temps de travail réel ne peut pas dépasser la durée prévue.",
         path: ["actualWorkSeconds"],
     });
+
+export const updatePomodoroSettingsSchema = z
+    .object({
+        workMinutes: z.number().int().min(1).max(180),
+        breakMinutes: z.number().int().min(0).max(60),
+        autoChainBreak: z.boolean(),
+    })
+    .strict();

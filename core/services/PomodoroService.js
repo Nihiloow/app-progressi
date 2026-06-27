@@ -115,6 +115,51 @@ export class PomodoroService {
         });
     }
 
+    // Lit les préférences persistées de l'utilisateur — appelé au montage du
+    // PomodoroTimerProvider pour initialiser le hook avec les VRAIES valeurs
+    // de l'utilisateur plutôt qu'un défaut générique 25/5.
+    async getSettings(userId) {
+        const user = await this.#db.user.findUnique({
+            where: { id: userId },
+            select: {
+                pomodoroWorkMinutes: true,
+                pomodoroBreakMinutes: true,
+                pomodoroAutoChainBreak: true,
+            },
+        });
+
+        return {
+            workMinutes: user.pomodoroWorkMinutes,
+            breakMinutes: user.pomodoroBreakMinutes,
+            autoChainBreak: user.pomodoroAutoChainBreak,
+        };
+    }
+
+    // Persiste les nouvelles préférences. Simple mise à jour, aucune règle
+    // métier ici au-delà de la validation Zod déjà appliquée en amont par la
+    // route — pas besoin de transaction, une seule table touchée.
+    async updateSettings(userId, settings) {
+        const user = await this.#db.user.update({
+            where: { id: userId },
+            data: {
+                pomodoroWorkMinutes: settings.workMinutes,
+                pomodoroBreakMinutes: settings.breakMinutes,
+                pomodoroAutoChainBreak: settings.autoChainBreak,
+            },
+            select: {
+                pomodoroWorkMinutes: true,
+                pomodoroBreakMinutes: true,
+                pomodoroAutoChainBreak: true,
+            },
+        });
+
+        return {
+            workMinutes: user.pomodoroWorkMinutes,
+            breakMinutes: user.pomodoroBreakMinutes,
+            autoChainBreak: user.pomodoroAutoChainBreak,
+        };
+    }
+
     // ─── Méthodes privées ─────────────────────────────────────────────────
 
     async #getOwnedTask(db, taskId, userId) {

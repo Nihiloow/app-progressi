@@ -99,6 +99,9 @@ model User {
   xpEvents        XpEvent[]
   moderationFlags ModerationFlag[]
   pomodoroSessions PomodoroSession[]
+  pomodoroWorkMinutes    Int     @default(25)
+  pomodoroBreakMinutes   Int     @default(5)
+  pomodoroAutoChainBreak Boolean @default(true)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 }
