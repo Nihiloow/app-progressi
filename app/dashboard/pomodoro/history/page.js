@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { usePomodoroHistory } from "@/hooks/usePomodoroHistory";
 import { PomodoroHistoryList } from "@/components/pomodoro/PomodoroHistoryList";
-import { ChevronLeftIcon } from "@/components/ui/icons";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function PomodoroHistoryPage() {
     const router = useRouter();
@@ -37,26 +37,17 @@ export default function PomodoroHistoryPage() {
 
     return (
         <main className="flex-1 overflow-y-auto p-6">
-            {/* Bouton retour contextuel : sans lui, cette page n'avait
-                aucun chemin de sortie visible sur mobile (la BottomNav n'a
-                pas d'entrée Historique) — seul le bouton natif du
-                navigateur existait, peu fiable et peu découvrable.
-                router.back() plutôt qu'un lien statique vers
-                /dashboard/pomodoro : respecte le vrai point d'entrée réel
-                de l'utilisateur, quel qu'il soit. */}
-            <div className="mb-6 flex items-center gap-2">
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    aria-label="Retour"
-                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                >
-                    <ChevronLeftIcon className="h-5 w-5" />
-                </button>
-                <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                    Historique des séances
-                </h1>
-            </div>
+            {/* onBack explicite vers /dashboard/pomodoro plutôt que le
+                router.back() par défaut de PageHeader : cette page n'a
+                qu'une seule destination logique de retour, le Timer.
+                router.back() dépend de la pile d'historique réelle du
+                navigateur — un rechargement de page suivi d'une navigation
+                pouvait ramener ailleurs que le Timer, bug constaté en usage
+                réel. Un lien fixe élimine cette classe de bug. */}
+            <PageHeader
+                title="Historique des séances"
+                onBack={() => router.push("/dashboard/pomodoro")}
+            />
 
             <div className="mx-auto max-w-3xl">
                 <PomodoroHistoryList sessions={sessions} />
