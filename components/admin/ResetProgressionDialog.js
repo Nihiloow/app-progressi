@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+
 // Confirmation légère du reset : contrairement à DeleteUserDialog (hard-
 // delete, irréversible, retape du pseudo exigée), un reset de progression
 // est une action moins grave — le ledger XpEvent survit intact, seul le
@@ -11,9 +14,23 @@ export function ResetProgressionDialog({
     onCancel,
     isPending,
 }) {
+    const panelRef = useFocusTrap(true);
+
+    useEffect(() => {
+        const onKey = (e) => e.key === "Escape" && onCancel();
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [onCancel]);
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+            <div
+                ref={panelRef}
+                role="alertdialog"
+                aria-modal="true"
+                aria-label="Réinitialiser la progression"
+                className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+            >
                 <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                     Réinitialiser la progression
                 </h2>

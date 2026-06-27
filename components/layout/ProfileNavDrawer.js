@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { UserIcon, DashboardIcon } from "@/components/ui/icons";
 
 // Tiroir bas réservé aux comptes ADMIN sur mobile : un admin a deux
@@ -12,6 +13,8 @@ import { UserIcon, DashboardIcon } from "@/components/ui/icons";
 // sous-popover en flux, donc aucun besoin de scroll interne ni de hauteur
 // généreuse (85vh côté TaskActionDrawer) — un panneau compact suffit.
 export function ProfileNavDrawer({ isOpen, onClose }) {
+    const panelRef = useFocusTrap(isOpen);
+
     useEffect(() => {
         if (!isOpen) return;
         const onKey = (e) => e.key === "Escape" && onClose();
@@ -37,6 +40,10 @@ export function ProfileNavDrawer({ isOpen, onClose }) {
             />
 
             <div
+                ref={panelRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Navigation profil et administration"
                 className={`pb-safe fixed bottom-0 left-0 z-[95] w-full transform rounded-t-2xl bg-white shadow-2xl transition-transform duration-300 ease-out md:hidden dark:bg-zinc-900 ${
                     isOpen ? "translate-y-0" : "translate-y-full"
                 }`}

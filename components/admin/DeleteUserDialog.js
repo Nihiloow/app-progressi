@@ -1,18 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 // Confirmation forte du hard-delete : l'admin doit retaper le pseudo
 // exact. Garde-fou contre la suppression accidentelle d'un compte (et
 // de tout son historique XP en cascade).
 export function DeleteUserDialog({ user, onConfirm, onCancel, isPending }) {
     const [confirmText, setConfirmText] = useState("");
+    const panelRef = useFocusTrap(true);
+
+    // Cette modale n'a pas de prop isOpen — elle n'est montée par le
+    // parent (AdminUsersPage) que lorsqu'un utilisateur est sélectionné
+    // pour suppression. isActive est donc toujours true tant qu'elle
+    // existe dans le DOM (cf. useFocusTrap(true) ci-dessus).
+    useEffect(() => {
+        const onKey = (e) => e.key === "Escape" && onCancel();
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+    }, [onCancel]);
 
     const canDelete = confirmText === user.pseudo;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
+            <div
+                ref={panelRef}
+                role="alertdialog"
+                aria-modal="true"
+                aria-label="Supprimer définitivement le compte"
+                className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-xl dark:border-zinc-800 dark:bg-zinc-900"
+            >
                 <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                     Supprimer définitivement
                 </h2>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { CloseIcon, CheckIcon } from "@/components/ui/icons";
 import { useUpdatePomodoroSettings } from "@/hooks/usePomodoroSettings";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 // Réglages du minuteur, en MODALE centrée (voile + panneau) plutôt qu'en
 // popover ancré au déclencheur — pattern repris d'AvatarUploadModal.
@@ -16,6 +17,7 @@ export function PomodoroSettings({ settings, onChange, children }) {
     const [isOpen, setIsOpen] = useState(false);
     const [draft, setDraft] = useState(settings);
     const updateSettings = useUpdatePomodoroSettings();
+    const panelRef = useFocusTrap(isOpen);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -58,7 +60,13 @@ export function PomodoroSettings({ settings, onChange, children }) {
                         e.target === e.currentTarget && setIsOpen(false)
                     }
                 >
-                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-900">
+                    <div
+                        ref={panelRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Réglages du minuteur"
+                        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-900"
+                    >
                         <div className="mb-4 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                                 Réglages

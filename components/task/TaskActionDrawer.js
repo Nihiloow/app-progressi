@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { STATUS_LABELS } from "@/components/ui/taskAppearance";
 import { TaskDrawerHeader } from "@/components/task/TaskDrawerHeader";
 import { TaskDrawerDateLine } from "@/components/task/TaskDrawerDateLine";
@@ -22,6 +23,8 @@ export function TaskActionDrawer({
     onToggleStatus,
     onDeleteTask,
 }) {
+    const panelRef = useFocusTrap(isOpen);
+
     useEffect(() => {
         if (!isOpen) return;
         const onKey = (e) => e.key === "Escape" && onClose();
@@ -70,6 +73,10 @@ export function TaskActionDrawer({
             />
 
             <div
+                ref={panelRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Options de la quête : ${task.title}`}
                 className={`pb-safe fixed bottom-0 left-0 z-[95] flex max-h-[85vh] w-full transform flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl transition-transform duration-300 ease-out md:hidden dark:bg-zinc-900 ${
                     isOpen ? "translate-y-0" : "translate-y-full"
                 }`}

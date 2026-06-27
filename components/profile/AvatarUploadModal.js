@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useUploadAvatar } from "@/hooks/useUploadAvatar";
 import { useRemoveAvatar } from "@/hooks/useRemoveAvatar";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { CloseIcon, TrashIcon, CameraIcon } from "@/components/ui/icons";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -18,6 +19,7 @@ export function AvatarUploadModal({ user, isOpen, onClose }) {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [clientError, setClientError] = useState("");
     const fileInputRef = useRef(null);
+    const panelRef = useFocusTrap(isOpen);
 
     const uploadAvatar = useUploadAvatar();
     const removeAvatar = useRemoveAvatar();
@@ -90,7 +92,13 @@ export function AvatarUploadModal({ user, isOpen, onClose }) {
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4"
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-900">
+            <div
+                ref={panelRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Photo de profil"
+                className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl dark:bg-zinc-900"
+            >
                 <div className="mb-4 flex items-center justify-between">
                     <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                         Photo de profil
