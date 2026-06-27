@@ -28,6 +28,7 @@ export function useCompletePomodoroSession() {
             showXpToast({
                 xpGained: data.xpGained,
                 hasLeveledUp: data.hasLeveledUp,
+                newLevel: data.user?.level,
             });
         },
     });

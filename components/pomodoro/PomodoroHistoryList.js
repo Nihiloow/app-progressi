@@ -116,12 +116,6 @@ export function PomodoroHistoryList({ sessions }) {
                                                 session.xpFromTask}{" "}
                                             XP
                                         </span>
-                                        {session.xpFromTask > 0 && (
-                                            <span className="text-[10px] text-slate-400 dark:text-zinc-500">
-                                                {session.xpFromTime} focus +{" "}
-                                                {session.xpFromTask} quête
-                                            </span>
-                                        )}
                                     </div>
                                 </li>
                             ))}

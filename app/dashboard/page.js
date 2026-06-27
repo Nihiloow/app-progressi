@@ -54,7 +54,7 @@ export default function DashboardPage() {
             <main className="flex flex-1 flex-col overflow-hidden relative">
                 <header className="hidden md:block border-b border-slate-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
                     <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
-                        Tasks du jour
+                        Tâches du jour
                     </h1>
                     <TaskForm />
                 </header>

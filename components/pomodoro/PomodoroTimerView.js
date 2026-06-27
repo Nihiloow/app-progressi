@@ -83,7 +83,7 @@ export function PomodoroTimerView() {
                             </span>
                         </>
                     ) : (
-                        "À quoi travailles-tu ?"
+                        "Sur quelle tâche travailles-tu ?"
                     )}
                     <ChevronRightIcon className="h-4 w-4 text-slate-400" />
                 </button>
