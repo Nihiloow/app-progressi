@@ -18,16 +18,23 @@ import {
 // remboursement), TODO → WONT_DO (abandon, neutre), WONT_DO → TODO (neutre).
 // Toute autre transition est rejetée.
 //
-// La classe reçoit son client de base de données ET son TagService par le
-// constructeur (injection de dépendance) : testable avec des mocks pour les
-// deux, sans dépendre d'un import figé en dur.
+// La classe reçoit son client de base de données, son TagService ET son
+// ModerationService par le constructeur (injection de dépendance) :
+// testable avec des mocks pour les trois, sans dépendre d'un import figé
+// en dur. ModerationService a rejoint ce pattern après coup — il était
+// initialement appelé via le singleton importé directement, seule
+// dépendance du service à déroger à cette discipline ; corrigé pour rester
+// cohérent avec TagService (même rôle : collaborateur métier secondaire
+// du flux de complétion, doit pouvoir être mocké de la même façon).
 export class TaskService {
     #db;
     #tagService;
+    #moderationService;
 
-    constructor(db, tagSvc) {
+    constructor(db, tagSvc, moderationSvc) {
         this.#db = db;
         this.#tagService = tagSvc;
+        this.#moderationService = moderationSvc;
     }
 
     // Crée une tâche pour l'utilisateur et synchronise ses tags en une seule
@@ -144,7 +151,11 @@ export class TaskService {
                 // dépassé. N'empêche jamais la complétion elle-même — c'est
                 // de la visibilité pour l'admin, pas un blocage (le rate-
                 // limit actif se trouve dans la route, en amont du service).
-                await moderationService.checkRapidCycle(tx, userId, taskId);
+                await this.#moderationService.checkRapidCycle(
+                    tx,
+                    userId,
+                    taskId,
+                );
             }
 
             await tx.user.update({
@@ -291,6 +302,10 @@ export class TaskService {
     }
 }
 
-// Instance unique branchée sur le vrai client Prisma et le vrai TagService,
-// importée par les routes.
-export const taskService = new TaskService(prisma, tagService);
+// Instance unique branchée sur le vrai client Prisma, le vrai TagService et
+// le vrai ModerationService, importée par les routes.
+export const taskService = new TaskService(
+    prisma,
+    tagService,
+    moderationService,
+);
